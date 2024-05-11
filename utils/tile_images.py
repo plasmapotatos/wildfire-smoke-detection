@@ -3,17 +3,18 @@ import os
 from PIL import Image
 from utils.get_images import get_images
 
+
 def tile_image(image, rows, columns):
     # Get the dimensions of the original image
     original_width, original_height = image.size
-    
+
     # Calculate the width and height of each tile
     tile_width = original_width // columns
     tile_height = original_height // rows
-    
+
     # Initialize a 2D list to store the tiled images
-    tiled_images = [[None]*columns for _ in range(rows)]
-    
+    tiled_images = [[None] * columns for _ in range(rows)]
+
     # Split the original image into tiles
     for i in range(rows):
         for j in range(columns):
@@ -22,14 +23,15 @@ def tile_image(image, rows, columns):
             upper = i * tile_height
             right = left + tile_width
             lower = upper + tile_height
-            
+
             # Crop the tile from the original image
             tile = image.crop((left, upper, right, lower))
-            
+
             # Store the tile in the 2D list
             tiled_images[i][j] = tile
-    
+
     return tiled_images
+
 
 images_path = "./images/tiled_raw_images"
 if not os.path.exists(images_path):

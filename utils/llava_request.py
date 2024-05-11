@@ -2,8 +2,29 @@ import requests
 import json
 import base64
 
-def llava_request(prompt, model_name, images):
-    payload={"model":model_name, "prompt":prompt, "images": images, "stream": False}
+from io import BytesIO
+from PIL import Image
+
+def to_base_64(image):
+    buff = BytesIO()
+    image.save(buff, format="JPEG")
+    img_str = base64.b64encode(buff.getvalue()).decode("utf-8")
+    return img_str
+
+def llava_request(prompt, model_name, image_paths):
+    # load images
+    images = []
+    for image_path in image_paths:
+        if image_path.endswith(".jpg") or image_path.endswith(".jpeg"):
+            image = Image.open(image_path)
+            images.append(image)
+    #convert to base64
+    base64_images = []
+
+    for image in images:
+        base64_images.append(to_base_64(image))
+        
+    payload={"model":model_name, "prompt":prompt, "images": base64_images, "stream": False}
     while(True):
         try:
             r = requests.post("http://localhost:11434/api/generate", data=json.dumps(payload))
@@ -13,7 +34,5 @@ def llava_request(prompt, model_name, images):
             continue
 
 if(__name__ == "__main__"):
-    with open("./cropped_bbox_0.jpg", "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read())
-        response = llava_request("What is in the image", "llava:7b", [encoded_string.decode("utf-8")])
-        print(response)
+    response = llava_request("What is in the image", "llava:7b", "./cropped_bbox_0.jpg")
+    print(response)
