@@ -8,12 +8,13 @@ def create_animation(
     # Get list of image files in the folder
     image_files = [
         os.path.join(image_folder, img)
-        for img in os.listdir(image_folder)
+        for img in sorted(os.listdir(image_folder))
         if img.endswith(".jpg") or img.endswith(".jpeg")
     ]
 
     # Sort images alphabetically
     image_files.sort()
+    print(image_files)
 
     # Read the first image to get dimensions
     frame = cv2.imread(image_files[0])
@@ -44,8 +45,8 @@ def create_animation(
 
 
 # Example usage
-image_folder_path = "series_results/llava/4x4/20160619_FIRE_lp-e-iqeye/stitched"  # Replace with your image folder path
-output_video = "false_positive_compressed.mp4"
+image_folder_path = "sorted_images"  # Replace with your image folder path
+output_video = "test_sorted.mp4"
 frame_duration_ms = 1000  # Time interval for each frame in milliseconds
 resize_width = 640  # New width of the resized images (optional)
 resize_height = 480  # New height of the resized images (optional)

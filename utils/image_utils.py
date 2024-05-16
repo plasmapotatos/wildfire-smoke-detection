@@ -1,5 +1,8 @@
+import xml.etree.ElementTree as ET
 from PIL import Image, ImageDraw
 import cv2
+import os
+import numpy as np
 
 
 def add_border(
@@ -158,6 +161,61 @@ def tile_image(image, rows, columns):
 
     return tiled_images
 
+def load_images_from_directory(directory):
+    image_list = []
+    image_names = []
+    # List all files in the directory
+    files = os.listdir(directory)
+    # Sort files alphabetically
+    files.sort()
+    # Iterate through files
+    for filename in files:
+        # Check if file is an image (you may want to add more image file extensions)
+        if filename.endswith(('.jpg', '.jpeg', '.png', '.gif')):
+            # Open the image file
+            image_path = os.path.join(directory, filename)
+            image = Image.open(image_path)
+            # Append image to list
+            image_list.append(image)
+            image_names.append(filename.split('.')[0])
+    return image_list, image_names
+
+def pil_to_cv2(pil_image):
+    """
+    Converts a PIL (Python Imaging Library) image to OpenCV format.
+
+    Args:
+        pil_image (PIL.Image): The PIL image to be converted.
+
+    Returns:
+        numpy.ndarray: The image in OpenCV format (BGR color space).
+    """
+    # Convert PIL image to numpy array
+    np_array = np.array(pil_image)
+
+    # Convert RGB to BGR (OpenCV uses BGR color space)
+    bgr_array = cv2.cvtColor(np_array, cv2.COLOR_RGB2BGR)
+    
+    return bgr_array
+
+def parse_xml(xml_file):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    filename = root.find('filename').text
+    folder = root.find('folder').text
+    path = root.find('path').text
+    size = root.find('size')
+    width = int(size.find('width').text)
+    height = int(size.find('height').text)
+    boxes = []
+    for obj in root.findall('object'):
+        box = obj.find('bndbox')
+        xmin = int(float(box.find('xmin').text))
+        ymin = int(float(box.find('ymin').text))
+        xmax = int(float(box.find('xmax').text))
+        ymax = int(float(box.find('ymax').text))
+        boxes.append((xmin, ymin, xmax, ymax))
+    return path, boxes
 
 if __name__ == "__main__":
     # Load an image
