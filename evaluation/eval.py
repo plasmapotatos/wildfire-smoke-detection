@@ -7,15 +7,19 @@ from PIL import Image
 from utils.image_utils import add_border, stitch_images, overlay_bbox
 
 # Define paths
-results_dir = "results/raw"
+results_dir = "results/llava-next/5x6/raw"
 xmls_dir = "xmls"
-evaluation_dir = "./results/llava/processed"
+evaluation_dir = "./results/llava-next/5x6/processed"
+
+# Define number of rows and columns
+NUM_ROWS = 5
+NUM_COLUMNS = 6
 
 # Define tile dimensions
 IMAGE_WIDTH = 640
 IMAGE_HEIGHT = 480
-TILE_WIDTH = IMAGE_WIDTH // 4
-TILE_HEIGHT = IMAGE_HEIGHT // 4
+TILE_WIDTH = IMAGE_WIDTH // NUM_COLUMNS
+TILE_HEIGHT = IMAGE_HEIGHT // NUM_ROWS
 
 
 def get_tile_box(tile_index, image_width, image_height, num_rows, num_columns):
@@ -91,11 +95,7 @@ def process_tiles(tiles, tiled_image_path, num_columns, num_rows, bbox=None):
         image_array[row][col] = add_border(image_array[row][col])
 
     # Stitch the images together
-    stitched_image = stitch_images(
-        image_array,
-        num_columns,
-        num_rows,
-    )
+    stitched_image = stitch_images(image_array)
 
     if bbox:
         stitched_image = overlay_bbox(stitched_image, bbox)
@@ -105,9 +105,9 @@ def process_tiles(tiles, tiled_image_path, num_columns, num_rows, bbox=None):
 
 # Function to classify results and move files
 def classify_results(results_dir, xmls_dir, evaluation_dir):
-    num_true_positive = 0
-    num_false_positive = 0
-    num_false_negative = 0
+    true_positives = []
+    false_positives = []
+    false_negatives = []
 
     for results_file in os.listdir(results_dir):
         if results_file.endswith("_results.txt"):
@@ -121,7 +121,7 @@ def classify_results(results_dir, xmls_dir, evaluation_dir):
                 with open(results_path, "r") as f:
                     results = f.read().splitlines()
                 positive_tiles = [
-                    idx for idx, result in enumerate(results) if result == "Yes"
+                    idx for idx, result in enumerate(results) if result.lower() == "yes"
                 ]
 
                 # Classify the results
@@ -135,29 +135,32 @@ def classify_results(results_dir, xmls_dir, evaluation_dir):
                         for tile in positive_tiles
                     ):
                         target_dir = os.path.join(evaluation_dir, "false_positive")
-                        num_false_positive += 1
+                        false_positives.append(image_id)
                     else:
                         target_dir = os.path.join(evaluation_dir, "true_positive")
-                        num_true_positive += 1
+                        true_positives.append(image_id)
                 elif bounding_box and not positive_tiles:
                     target_dir = os.path.join(evaluation_dir, "false_negative")
-                    num_false_negative += 1
+                    false_negatives.append(image_id)
 
                 # Move the results file to the target directory
                 if target_dir:
+                    target_file = os.path.join(target_dir, image_id + ".jpg")
+                    if os.path.exists(target_file):
+                        print(f"Skipping {results_file} as it already exists.")
+                        continue
                     tile_image_path = os.path.join("images", "tiled_images", image_id)
                     processed_image = process_tiles(
                         positive_tiles, tile_image_path, 4, 4, bounding_box
                     )
-                    target_file = os.path.join(target_dir, image_id + ".jpg")
                     os.makedirs(target_dir, exist_ok=True)
                     processed_image.save(target_file)
                 else:
                     print(f"Skipping {results_file} as no bounding box found.")
 
-    print(f"True positives: {num_true_positive}")
-    print(f"False positives: {num_false_positive}")
-    print(f"False negatives: {num_false_negative}")
+    print(f"True positives: {len(true_positives)}")
+    print(f"False positives: {len(false_positives)}")
+    print(f"False negatives: {len(false_negatives)}")
 
 
 if __name__ == "__main__":

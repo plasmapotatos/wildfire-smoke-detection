@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw
+import cv2
 
 
 def add_border(
@@ -39,27 +40,19 @@ def add_border(
     return image
 
 
-def stitch_images(image_array, num_columns, num_rows):
+def stitch_images(image_array):
     """
     Stitch together images arranged in a grid format.
 
     Arguments:
     image_array : list
         2D array of images to be stitched together.
-    num_columns : int
-        Number of columns in the grid.
-    num_rows : int
-        Number of rows in the grid.
-
     Returns:
     PIL.Image
         The stitched image.
     """
-    expected_length = num_columns * num_rows
-    if len(image_array) * len(image_array[0]) != expected_length:
-        raise ValueError(
-            "The length of the image array does not match the expected length."
-        )
+    num_rows = len(image_array)
+    num_columns = len(image_array[0])
 
     image_width, image_height = image_array[0][0].size
 
@@ -111,12 +104,68 @@ def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=2):
     return image
 
 
+def draw_horizontal_line(image, x, line_color=(255, 0, 0), line_thickness=1):
+    """
+    Draws a horizontal line across the image at the specified x-coordinate.
+
+    Args:
+    - image: PIL Image object.
+    - x: The x-coordinate where the line should be drawn.
+    - line_color: Tuple representing the RGB color of the line. Default is red.
+    - line_thickness: Thickness of the line. Default is 1.
+
+    Returns:
+    - PIL Image object with the horizontal line drawn.
+    """
+    draw = ImageDraw.Draw(image)
+    width, height = image.size
+    draw.line((0, x, width, x), fill=line_color, width=line_thickness)
+    return image
+
+def resize_images(images, width, height):
+    resized_images = []
+    for image in images:
+        resized_image = cv2.resize(image, (width, height))
+        resized_images.append(resized_image)
+    return resized_images
+
+
+def tile_image(image, rows, columns):
+    # Get the dimensions of the original image
+    original_width, original_height = image.size
+
+    # Calculate the width and height of each tile
+    tile_width = original_width // columns
+    tile_height = original_height // rows
+
+    # Initialize a 2D list to store the tiled images
+    tiled_images = [[None] * columns for _ in range(rows)]
+
+    # Split the original image into tiles
+    for i in range(rows):
+        for j in range(columns):
+            # Calculate the coordinates for cropping each tile
+            left = j * tile_width
+            upper = i * tile_height
+            right = left + tile_width
+            lower = upper + tile_height
+
+            # Crop the tile from the original image
+            tile = image.crop((left, upper, right, lower))
+
+            # Store the tile in the 2D list
+            tiled_images[i][j] = tile
+
+    return tiled_images
+
+
 if __name__ == "__main__":
     # Load an image
-    image = Image.open("./test_smoke.jpg")
+    image = Image.open("raw_data/20160604_FIRE_rm-n-mobo-c/1465066440_+00840.jpg")
 
-    # Add a border to the image
-    bordered_image = add_border(image, border_size=10, border_color=(255, 0, 0))
+    tiled_images = tile_image(image, 4, 4)
 
-    # Display the image
-    bordered_image.save("./bordered_image.jpg")
+    #save each tiled image in tile_row_col
+    for row in range(4):
+        for col in range(4):
+            tiled_images[row][col].save(f"tile_{row}_{col}.jpg")
