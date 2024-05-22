@@ -3,7 +3,7 @@ import os
 from PIL import Image
 from tqdm import tqdm
 
-from utils.llava_request import llava_request
+from utils.request_utils import llava_request
 
 image_super_folder = "./images/tiled_images"
 model_name = "llava:7b-v1.6-mistral-fp16"  # Edit this model name as needed

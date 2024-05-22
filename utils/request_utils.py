@@ -1,10 +1,12 @@
-import socket
-import requests
-import json
 import base64
-
+import json
+import socket
 from io import BytesIO
+
+import requests
 from PIL import Image
+
+from utils.prompts import LLAVA_PROMPT, PALIGEMMA_PROMPT
 
 
 def to_base_64(image):
@@ -48,6 +50,7 @@ def llava_request(prompt, model_name, image_paths=None, images=None):
         except Exception as e:
             print(e)
             continue
+
 
 def prompt_llava(prompt, image_paths=None, images=None):
     if image_paths is None and images is None:
@@ -134,6 +137,36 @@ def prompt_llava_next(prompt, image_paths=None, images=None):
         except requests.exceptions.RequestException as e:
             print("Error:", e)
 
+
+def prompt_paligemma(prompt, image_paths=None, images=None):
+    if image_paths is None and images is None:
+        raise ValueError("Either image_path or image must be provided")
+
+    if images is not None:
+        processed_images = []
+        for image in images:
+            buffer = BytesIO()
+            image.save(buffer, format="JPEG")
+            img_b64 = base64.b64encode(buffer.getvalue())
+            processed_images.append(img_b64)
+
+        url = "http://localhost:8000"
+        headers = {"Content-type": "application/json", "Accept": "text/plain"}
+        payload = {"images": processed_images, "prompt": prompt}
+    else:
+        url = "http://localhost:8000"
+        payload = {"image_paths": image_paths, "prompt": prompt}
+
+    try:
+        response = requests.post(url, data=payload)
+        if response.status_code == 200:
+            return response.text
+        else:
+            print("Failed to send POST request. Status code:", response.status_code)
+    except requests.exceptions.RequestException as e:
+        print("Error:", e)
+
+
 prompt = """You are a proficient smoke detector at a fire tower. Does the following image contain wildfire smoke? Look carefully, and distinguish between clouds and smoke. Output "yes" only if there is smoke, and "no" only if there is no smoke. Be conservative, and only output "yes" if you are sure there is smoke. Reason out your logic, and enclose it in <Reasoning> <Reasoning/>. *****Do NOT go over 50 words*****. If you find yourself repeating yourself in your reasoning, stop your reasoning immediately. Then, output one line which is either "yes" or "no", enclosing it in <Output> <Output/>."""
 
 temp = """You are a proficient smoke detector at a fire tower. Does the following image contain wildfire smoke? Look carefully, and distinguish between clouds and smoke. Reason out your logic, and enclose it in <Reasoning> <Reasoning/>. *****Do NOT go over 50 words*****. If you find yourself repeating yourself in your reasoning, stop your reasoning immediately. Then, output one line which is either "yes" or "no", enclosing it in <Output> <Output/>.
@@ -154,5 +187,5 @@ test = """"You are a proficient smoke detector at a fire tower. Does the followi
 if __name__ == "__main__":
     img = Image.open("tile_3_1.jpg")
     img2 = Image.open("tile_2_3.jpg")
-    response = prompt_llava(test, images=[img, img2])
+    response = prompt_paligemma(PALIGEMMA_PROMPT, images=[img, img2])
     print(response)

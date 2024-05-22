@@ -3,6 +3,36 @@ from PIL import Image, ImageDraw
 import cv2
 import os
 import numpy as np
+import re
+
+
+# Function to extract, parse, and scale the coordinate string in the format <locXXXX> in a specific order
+def extract_and_parse_coordinates(text, width, height):
+    # Regex pattern to match <locXXXX> parts
+    pattern = r"<loc\d{4}>"
+    # Find all parts that match the pattern
+    matches = re.findall(pattern, text)
+
+    if len(matches) != 4:
+        return None
+
+    # Extract integer values from each <locXXXX> part
+    values = [int(match[4:-1]) for match in matches]  # Remove '<loc' and '>'
+
+    # Reorder the coordinates to (ymin, xmin, ymax, xmax)
+    ymin, xmin, ymax, xmax = values
+
+    # Scaling factor (assuming original values are in the range 0-1024)
+    scale_x = width / 1024
+    scale_y = height / 1024
+
+    # Scale the coordinates
+    xmin = int(xmin * scale_x)
+    ymin = int(ymin * scale_y)
+    xmax = int(xmax * scale_x)
+    ymax = int(ymax * scale_y)
+
+    return xmin, ymin, xmax, ymax
 
 
 def add_border(
@@ -125,6 +155,7 @@ def draw_horizontal_line(image, x, line_color=(255, 0, 0), line_thickness=1):
     draw.line((0, x, width, x), fill=line_color, width=line_thickness)
     return image
 
+
 def resize_images(images, width, height):
     resized_images = []
     for image in images:
@@ -161,6 +192,7 @@ def tile_image(image, rows, columns):
 
     return tiled_images
 
+
 def load_images_from_directory(directory):
     image_list = []
     image_names = []
@@ -171,14 +203,15 @@ def load_images_from_directory(directory):
     # Iterate through files
     for filename in files:
         # Check if file is an image (you may want to add more image file extensions)
-        if filename.endswith(('.jpg', '.jpeg', '.png', '.gif')):
+        if filename.endswith((".jpg", ".jpeg", ".png", ".gif")):
             # Open the image file
             image_path = os.path.join(directory, filename)
             image = Image.open(image_path)
             # Append image to list
             image_list.append(image)
-            image_names.append(filename.split('.')[0])
+            image_names.append(filename.split(".")[0])
     return image_list, image_names
+
 
 def pil_to_cv2(pil_image):
     """
@@ -195,27 +228,29 @@ def pil_to_cv2(pil_image):
 
     # Convert RGB to BGR (OpenCV uses BGR color space)
     bgr_array = cv2.cvtColor(np_array, cv2.COLOR_RGB2BGR)
-    
+
     return bgr_array
+
 
 def parse_xml(xml_file):
     tree = ET.parse(xml_file)
     root = tree.getroot()
-    filename = root.find('filename').text
-    folder = root.find('folder').text
-    path = root.find('path').text
-    size = root.find('size')
-    width = int(size.find('width').text)
-    height = int(size.find('height').text)
+    filename = root.find("filename").text
+    folder = root.find("folder").text
+    path = root.find("path").text
+    size = root.find("size")
+    width = int(size.find("width").text)
+    height = int(size.find("height").text)
     boxes = []
-    for obj in root.findall('object'):
-        box = obj.find('bndbox')
-        xmin = int(float(box.find('xmin').text))
-        ymin = int(float(box.find('ymin').text))
-        xmax = int(float(box.find('xmax').text))
-        ymax = int(float(box.find('ymax').text))
+    for obj in root.findall("object"):
+        box = obj.find("bndbox")
+        xmin = int(float(box.find("xmin").text))
+        ymin = int(float(box.find("ymin").text))
+        xmax = int(float(box.find("xmax").text))
+        ymax = int(float(box.find("ymax").text))
         boxes.append((xmin, ymin, xmax, ymax))
     return path, boxes
+
 
 if __name__ == "__main__":
     # Load an image
@@ -223,7 +258,7 @@ if __name__ == "__main__":
 
     tiled_images = tile_image(image, 4, 4)
 
-    #save each tiled image in tile_row_col
+    # save each tiled image in tile_row_col
     for row in range(4):
         for col in range(4):
             tiled_images[row][col].save(f"tile_{row}_{col}.jpg")

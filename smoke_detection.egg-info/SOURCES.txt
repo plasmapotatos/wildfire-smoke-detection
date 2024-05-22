@@ -1,0 +1,6 @@
+README.md
+setup.py
+smoke_detection.egg-info/PKG-INFO
+smoke_detection.egg-info/SOURCES.txt
+smoke_detection.egg-info/dependency_links.txt
+smoke_detection.egg-info/top_level.txt

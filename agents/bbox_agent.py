@@ -7,7 +7,7 @@ from tqdm import tqdm
 import numpy as np
 from PIL import Image
 from utils.image_utils import tile_image, add_border, stitch_images
-from utils.llava_request import prompt_llava_next, prompt_llava
+from utils.request_utils import prompt_llava_next, prompt_llava
 
 
 def extract_answer(output):
