@@ -58,8 +58,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
             prompt = parsed_data["prompt"][0]
 
-            print(prompt, images)
-
             result = prompt_llava(prompt, image_paths, images)
             self._set_response()
             self.wfile.write(str(result).encode())

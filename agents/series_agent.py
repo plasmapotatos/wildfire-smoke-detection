@@ -79,6 +79,7 @@ def run_on_folder(image_folder, output_folder, prompt, num_rows, num_cols):
             output = ast.literal_eval(
                 prompt_llava_next(prompt, images=flattened_images)
             )
+
         output = [result.lower() for result in output]
 
         for row in range(num_rows):

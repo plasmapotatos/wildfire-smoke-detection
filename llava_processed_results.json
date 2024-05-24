@@ -1,0 +1,99 @@
+{
+    "true_positive_percent": 37.952640572870045,
+    "false_positive_percent": 19.037350476035478,
+    "true_negative_percent": 30.388965741720238,
+    "false_negative_percent": 12.621043209374236,
+    "average_least_seconds": 210.0261437908497,
+    "accuracy": 0.6834160631459029,
+    "precision": 0.6659527379167559,
+    "recall": 0.7504424778761062,
+    "f1_score": 0.7056776487498582,
+    "min_true_positive": 0,
+    "min_tp_folder": "20160711_FIRE_ml-n-mobo-c",
+    "min_true_negative": 0,
+    "min_tn_folder": "20170625_FIRE_mg-s-iqeye",
+    "worst_true_positives": [
+        {
+            "folder_name": "20160711_FIRE_ml-n-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 41,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20170613_FIRE_bh-w-mobo-c",
+            "true_positive": 0,
+            "false_positive": 1,
+            "true_negative": 39,
+            "false_negative": 41,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190716_Riverfire_rm-w-mobo-c",
+            "true_positive": 0,
+            "false_positive": 2,
+            "true_negative": 37,
+            "false_negative": 41,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190829_FIRE_rm-w-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 41,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20191005_FIRE_hp-s-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 41,
+            "least_seconds_after_smoke_tp": null
+        }
+    ],
+    "worst_true_negatives": [
+        {
+            "folder_name": "20170625_FIRE_mg-s-iqeye",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20170708_Whittier_syp-n-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20170708_Whittier_syp-n-mobo-m",
+            "true_positive": 40,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 1
+        },
+        {
+            "folder_name": "20170711_FIRE_bl-e-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20170711_FIRE_bm-s-mobo-c",
+            "true_positive": 24,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        }
+    ]
+}

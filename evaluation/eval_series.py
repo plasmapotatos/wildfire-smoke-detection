@@ -1,7 +1,9 @@
-import os
 import json
+import os
+
 from tqdm import tqdm
 
+model = "paligemma"
 
 def evaluate_tiles(tiled_results, image_label):
     """
@@ -13,6 +15,16 @@ def evaluate_tiles(tiled_results, image_label):
     """
     has_fire = any("yes" in row for row in tiled_results)
 
+    if model == "paligemma":
+        coords = [
+            extract_and_parse_coordinates(tiled_results, tile_width, tile_height)
+            for result in output
+        ]
+
+        bbox = union_bounding_box(
+            coords, num_rows, num_cols, tile_width, tile_height
+        )
+
     if has_fire and image_label:
         return "true_positive"
     elif has_fire and not image_label:
@@ -23,7 +35,28 @@ def evaluate_tiles(tiled_results, image_label):
         return "false_negative"
 
 
-def evaluate_series(series_folder):
+def evaluate_frame(results_string, image_label):
+    """
+    Evaluates the results based on the provided results string and image label.
+
+    Parameters:
+    results_string (str): The results string to evaluate.
+    image_label (str): The image label to evaluate.
+
+    Returns:
+    str: 'true_positive', 'false_positive', 'true_negative', or 'false_negative'.
+    """
+    if results_string and image_label:
+        return "true_positive"  # True Positive: Both are not falsy
+    elif results_string and not image_label:
+        return "false_positive"  # False Positive: results_string is not falsy and image_label is falsy
+    elif not results_string and not image_label:
+        return "true_negative"  # True Negative: Both are falsy
+    elif not results_string and image_label:
+        return "false_negative"  # False Negative: results_string is falsy and image_label is not falsy
+
+
+def evaluate_series(series_folder, mode="tiled"):
     """
     Evaluate a series of images in a folder.
 
@@ -53,10 +86,6 @@ def evaluate_series(series_folder):
 
         for file_name in os.listdir(raw_folder):
             if file_name.endswith("_results.txt"):
-                file_path = os.path.join(raw_folder, file_name)
-                with open(file_path, "r") as file:
-                    # Read the tiled results
-                    tiled_results = [line.strip().split() for line in file]
 
                 # Extract image label and time from file name
                 parts = file_name.split("_")
@@ -68,10 +97,27 @@ def evaluate_series(series_folder):
                     time_seconds = int(parts[1][0:])
                 except:
                     continue
+                if mode == "tiled":
+                    file_path = os.path.join(raw_folder, file_name)
+                    with open(file_path, "r") as file:
+                        # Read the tiled results
+                        tiled_results = [line.strip().split() for line in file]
 
-                # Evaluate the image
-                evaluation = evaluate_tiles(tiled_results, image_label)
-                series_stats[evaluation] += 1
+                    # Evaluate the image
+                    evaluation = evaluate_tiles(tiled_results, image_label)
+                    series_stats[evaluation] += 1
+
+                elif mode == "frame":
+                    file_path = os.path.join(raw_folder, file_name)
+                    with open(file_path, "r") as file:
+                        # Read the frame results
+                        results_string = file.read().strip()
+
+                    # Evaluate the image
+                    evaluation = evaluate_frame(results_string, image_label)
+                    series_stats[evaluation] += 1
+
+                # Update the least seconds after smoke for true positives
 
                 if evaluation == "true_positive":
                     if (
@@ -90,5 +136,7 @@ def evaluate_series(series_folder):
 
 
 # Example usage
-series_folder_path = "series_results/llava/4x4"
-evaluate_series(series_folder_path)
+model_name = "paligemma"
+mode = "tiled"
+series_folder_path = f"series_results/{model_name}/{mode}/4x4"
+evaluate_series(series_folder_path, mode="tiled")

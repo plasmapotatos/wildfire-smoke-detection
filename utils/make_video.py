@@ -1,4 +1,5 @@
 import os
+
 import cv2
 
 
@@ -44,15 +45,17 @@ def create_animation(
 
 
 # Example usage
-image_series_path = "series_results/llava/4x4"
+image_series_path = "series_results/paligemma/tiled/4x4"
 image_folder_path = "sorted_images"  # Replace with your image folder path
-output_path = "videos"
+output_path = "videos/paligemma/tiled/4x4"
 output_video = "test_sorted.mp4"
 frame_duration_ms = 250  # Time interval for each frame in milliseconds
 resize_width = 640  # New width of the resized images (optional)
 resize_height = 480  # New height of the resized images (optional)
 
-series_folders = os.listdir(image_series_path)
+series_folders = sorted(os.listdir(image_series_path))
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
 
 for series_folder in series_folders:
     image_folder_path = os.path.join(image_series_path, series_folder, "stitched")

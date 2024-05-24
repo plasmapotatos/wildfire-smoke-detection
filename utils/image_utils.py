@@ -1,9 +1,10 @@
-import xml.etree.ElementTree as ET
-from PIL import Image, ImageDraw
-import cv2
 import os
-import numpy as np
 import re
+import xml.etree.ElementTree as ET
+
+import cv2
+import numpy as np
+from PIL import Image, ImageDraw
 
 
 # Function to extract, parse, and scale the coordinate string in the format <locXXXX> in a specific order
@@ -13,14 +14,15 @@ def extract_and_parse_coordinates(text, width, height):
     # Find all parts that match the pattern
     matches = re.findall(pattern, text)
 
-    if len(matches) != 4:
+    if len(matches) != 4:  # TODO: change how to handle this
         return None
 
     # Extract integer values from each <locXXXX> part
     values = [int(match[4:-1]) for match in matches]  # Remove '<loc' and '>'
 
     # Reorder the coordinates to (ymin, xmin, ymax, xmax)
-    ymin, xmin, ymax, xmax = values
+    ymin, xmin = values[:2]
+    ymax, xmax = values[-2:]
 
     # Scaling factor (assuming original values are in the range 0-1024)
     scale_x = width / 1024
@@ -103,7 +105,7 @@ def stitch_images(image_array):
     return stitched_image
 
 
-def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=2):
+def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=5):
     """
     Overlay a bounding box onto an image.
 
@@ -115,7 +117,7 @@ def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=2):
     color : tuple, optional
         Color of the bounding box outline in RGB format. Default is red (255, 0, 0).
     thickness : int, optional
-        Thickness of the bounding box outline. Default is 2 pixels.
+        Thickness of the bounding box outline. Default is 5 pixels.
 
     Returns:
     PIL.Image
@@ -135,6 +137,66 @@ def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=2):
         )
 
     return image
+
+
+def union_bounding_box(bounding_boxes, num_rows, num_cols, tile_width, tile_height):
+    # Initialize the extreme values
+    min_xmin = float("inf")
+    min_ymin = float("inf")
+    max_xmax = float("-inf")
+    max_ymax = float("-inf")
+
+    # Area of a single tile
+    tile_area = tile_width * tile_height
+    threshold_area = 0.95 * tile_area
+
+    # Iterate over the bounding boxes and update the extreme values
+    for i, bbox in enumerate(bounding_boxes):
+        if bbox is not None:
+            xmin, ymin, xmax, ymax = bbox
+
+            # Calculate the bounding box area
+            bbox_area = (xmax - xmin) * (ymax - ymin)
+
+            # Ignore bounding boxes that cover more than 95% of the tile area
+            if bbox_area > threshold_area:
+                continue
+
+            # Calculate the tile's position in the larger image
+            row = i // num_cols
+            col = i % num_cols
+
+            # Calculate the offset for the current tile
+            x_offset = col * tile_width
+            y_offset = row * tile_height
+
+            # Translate the bounding box coordinates to the larger image
+            translated_xmin = xmin + x_offset
+            translated_ymin = ymin + y_offset
+            translated_xmax = xmax + x_offset
+            translated_ymax = ymax + y_offset
+
+            # Update the extreme values for the union bounding box
+            if translated_xmin < min_xmin:
+                min_xmin = translated_xmin
+            if translated_ymin < min_ymin:
+                min_ymin = translated_ymin
+            if translated_xmax > max_xmax:
+                max_xmax = translated_xmax
+            if translated_ymax > max_ymax:
+                max_ymax = translated_ymax
+
+    # Check if we found any valid bounding boxes
+    if (
+        min_xmin == float("inf")
+        or min_ymin == float("inf")
+        or max_xmax == float("-inf")
+        or max_ymax == float("-inf")
+    ):
+        return None  # No valid bounding boxes
+
+    # Return the smallest covering bounding box
+    return (min_xmin, min_ymin, max_xmax, max_ymax)
 
 
 def draw_horizontal_line(image, x, line_color=(255, 0, 0), line_thickness=1):
