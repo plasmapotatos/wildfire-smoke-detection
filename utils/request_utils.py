@@ -3,14 +3,15 @@ import json
 import socket
 import tempfile
 from io import BytesIO
+import ast
 
 import numpy as np
 import requests
 from gradio_client import Client, file
 from PIL import Image
 
-from utils.image_utils import extract_and_parse_coordinates, overlay_bbox
-from utils.prompts import LLAVA_PROMPT, PALIGEMMA_PROMPT
+from utils.image_utils import extract_and_parse_coordinates, overlay_bbox, extract_and_calculate_horizon, stitch_image_with_bboxes, stitch_image_with_bboxes
+from utils.prompts import LLAVA_PROMPT, PALIGEMMA_DETECT_PROMPT, PALIGEMMA_SEGMENT_PROMPT
 
 
 def to_base_64(image):
@@ -195,10 +196,28 @@ test = """"You are a proficient smoke detector at a fire tower. Does the followi
 """
 
 if __name__ == "__main__":
-    # image_bytes = BytesIO()
-    image = Image.open("test/test.jpg")
-    response = prompt_paligemma(PALIGEMMA_PROMPT, images=[image])
-    print(response)
+    # Open the file in read mode
+    with open('test/tile_boxes.txt', 'r') as tile_boxes_file:
+        tile_boxes = [ast.literal_eval(line.strip().strip('"')) for line in tile_boxes_file]
+    images = []
+    original_image = Image.open("test/test_smoke.jpg")
+    for i in range(10):
+        image = Image.open(f"test/tile_{i}.jpg")
+        images.append(image)
+    segment_responses = prompt_paligemma(PALIGEMMA_SEGMENT_PROMPT, images=images)
+    print(segment_responses)
+    detect_responses = prompt_paligemma(PALIGEMMA_DETECT_PROMPT, images=images)
+    horizon_xs = [extract_and_calculate_horizon(segment_response, images[0].width, images[0].height) for segment_response in segment_responses]
+    bboxs = [extract_and_parse_coordinates(detect_response, images[0].width, images[0].height) for detect_response in detect_responses]
+    print(horizon_xs)
+    print(tile_boxes)
+    print(bboxs)
+    stitched_image = stitch_image_with_bboxes(original_image, bboxs, tile_boxes)
+    stitched_image.save("test/stitched_image.jpg")
+    # # image_bytes = BytesIO()
+    # image = Image.open("test/test.jpg")
+    # response = prompt_paligemma(PALIGEMMA_PROMPT, images=[image])
+    # print(response)
     # with tempfile.NamedTemporaryFile(delete=True, suffix=".jpg") as temp:
     #     # Save the image to the temporary file
     #     image.save(temp, format="JPEG")

@@ -63,6 +63,7 @@ for series_folder in series_folders:
     if os.path.exists(output_video):
         print(f"Skipping {output_video} as it already exists.")
         continue
+    print(f"Creating video for {image_folder_path}...")
     create_animation(
         image_folder_path, output_video, frame_duration_ms, resize_width, resize_height
     )

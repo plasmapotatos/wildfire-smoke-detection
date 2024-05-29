@@ -14,7 +14,7 @@ def extract_and_parse_coordinates(text, width, height):
     # Find all parts that match the pattern
     matches = re.findall(pattern, text)
 
-    if len(matches) != 4:  # TODO: change how to handle this
+    if len(matches) < 4:  # TODO: change how to handle this
         return None
 
     # Extract integer values from each <locXXXX> part
@@ -74,37 +74,6 @@ def add_border(
 
     return image
 
-
-def stitch_images(image_array):
-    """
-    Stitch together images arranged in a grid format.
-
-    Arguments:
-    image_array : list
-        2D array of images to be stitched together.
-    Returns:
-    PIL.Image
-        The stitched image.
-    """
-    num_rows = len(image_array)
-    num_columns = len(image_array[0])
-
-    image_width, image_height = image_array[0][0].size
-
-    stitched_width = image_width * num_columns
-    stitched_height = image_height * num_rows
-
-    stitched_image = Image.new("RGB", (stitched_width, stitched_height))
-
-    for i in range(num_rows):
-        for j in range(num_columns):
-            paste_x = j * image_width
-            paste_y = i * image_height
-            stitched_image.paste(image_array[i][j], (paste_x, paste_y))
-
-    return stitched_image
-
-
 def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=5):
     """
     Overlay a bounding box onto an image.
@@ -138,6 +107,123 @@ def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=5):
 
     return image
 
+
+def stitch_images(image_array):
+    """
+    Stitch together images arranged in a grid format.
+
+    Arguments:
+    image_array : list
+        2D array of images to be stitched together.
+    Returns:
+    PIL.Image
+        The stitched image.
+    """
+    num_rows = len(image_array)
+    num_columns = len(image_array[0])
+
+    image_width, image_height = image_array[0][0].size
+
+    stitched_width = image_width * num_columns
+    stitched_height = image_height * num_rows
+
+    stitched_image = Image.new("RGB", (stitched_width, stitched_height))
+
+    for i in range(num_rows):
+        for j in range(num_columns):
+            paste_x = j * image_width
+            paste_y = i * image_height
+            stitched_image.paste(image_array[i][j], (paste_x, paste_y))
+
+    return stitched_image
+
+def get_union_bounding_box(bounding_boxes):
+    """
+    Calculate the union bounding box that covers all the input bounding boxes.
+
+    Parameters:
+    - bounding_boxes (list of tuples): A list of tuples specifying the bounding box coordinates (left, upper, right, lower).
+
+    Returns:
+    - union_bbox (tuple): A tuple specifying the union bounding box coordinates (left, upper, right, lower).
+    """
+    # Initialize the extreme values
+    min_xmin = float("inf")
+    min_ymin = float("inf")
+    max_xmax = float("-inf")
+    max_ymax = float("-inf")
+
+    # Iterate over the bounding boxes and update the extreme values
+    for bbox in bounding_boxes:
+        if bbox is not None:
+            xmin, ymin, xmax, ymax = bbox
+
+            # Update the extreme values for the union bounding box
+            if xmin < min_xmin:
+                min_xmin = xmin
+            if ymin < min_ymin:
+                min_ymin = ymin
+            if xmax > max_xmax:
+                max_xmax = xmax
+            if ymax > max_ymax:
+                max_ymax = ymax
+
+    # Check if we found any valid bounding boxes
+    if (
+        min_xmin == float("inf")
+        or min_ymin == float("inf")
+        or max_xmax == float("-inf")
+        or max_ymax == float("-inf")
+    ):
+        return None  # No valid bounding boxes
+
+    # Return the smallest covering bounding box
+    return (min_xmin, min_ymin, max_xmax, max_ymax)
+
+def stitch_image_with_bboxes(image, bounding_boxes, tiled_boxes, union=False):
+    """
+    Overlays bounding boxes on the original image at their relative positions specified by tiled_boxes.
+
+    Parameters:
+    - image (PIL.Image.Image): The original image.
+    - bounding_boxes (list of tuples): A list of tuples specifying the bounding box coordinates (left, upper, right, lower).
+    - tiled_boxes (list of tuples): A list of tuples specifying the relative coordinates (x, y) for each bounding box.
+
+    Returns:
+    - stitched_image (PIL.Image.Image): The image with all bounding boxes overlaid at their relative positions.
+    """
+    # Create a copy of the image to draw on to avoid modifying the original image
+    stitched_image = image.copy()
+
+    adjusted_bboxs = []
+    # Iterate over the bounding boxes and their corresponding tiled boxes
+    for bbox, tbox in zip(bounding_boxes, tiled_boxes):
+        # Calculate the position of the bounding box on the original image
+        # x_offset and y_offset are the offsets from the tiled box's position
+        x_offset = tbox[0]
+        y_offset = tbox[1]
+        if bbox is None:
+            continue
+        
+        # Adjust the bounding box coordinates by adding the offsets
+        adjusted_bbox = (
+            bbox[0] + x_offset,
+            bbox[1] + y_offset,
+            bbox[2] + x_offset,
+            bbox[3] + y_offset
+        )
+
+        adjusted_bboxs.append(adjusted_bbox)
+        # Overlay the bounding box on the stitched image using the overlay_bbox function
+        if not union:
+            stitched_image = overlay_bbox(stitched_image, adjusted_bbox)
+
+    if union:
+        union_bbox = get_union_bounding_box(adjusted_bboxs)
+        if union_bbox is not None:
+            stitched_image = overlay_bbox(stitched_image, union_bbox)
+
+    return stitched_image
 
 def union_bounding_box(bounding_boxes, num_rows, num_cols, tile_width, tile_height):
     # Initialize the extreme values
@@ -198,6 +284,42 @@ def union_bounding_box(bounding_boxes, num_rows, num_cols, tile_width, tile_heig
     # Return the smallest covering bounding box
     return (min_xmin, min_ymin, max_xmax, max_ymax)
 
+def extract_and_calculate_horizon(input_str, image_width, image_height):
+    # Convert the loc values from strings to integers
+    xmin, ymin, xmax, ymax = extract_and_parse_coordinates(input_str, image_width, image_height)
+
+    # Calculate the adjusted xmax
+    horizon_y = ymax
+    
+    return horizon_y
+
+def extract_tiles_from_horizon(image, horizon_y, dist_above, dist_below, tile_width, tile_number):
+    # Calculate the total height of the tiles region
+    total_height = dist_above + dist_below
+
+    # Calculate the starting y-coordinate for extraction
+    start_y = max(0, horizon_y - dist_above)
+
+    # Calculate the ending y-coordinate for extraction
+    end_y = min(image.height, horizon_y + dist_below)
+
+    # Initialize an array to store the tiles
+    tiles = []
+    tile_boxes = []
+
+    # Iterate through the x-coordinates
+    for x in range(0, image.width - tile_width + 1, (image.width - tile_width) // (tile_number - 1)):
+        # Extract the tile from the image
+        tile_box = (x, start_y, x + tile_width, end_y)
+ 
+        tile_boxes.append(tile_box)
+        
+        # Extract the tile from the image
+        tile = image.crop(tile_box)
+        # Append the tile to the tiles array
+        tiles.append(tile)
+
+    return tiles, tile_boxes
 
 def draw_horizontal_line(image, x, line_color=(255, 0, 0), line_thickness=1):
     """
@@ -316,11 +438,24 @@ def parse_xml(xml_file):
 
 if __name__ == "__main__":
     # Load an image
-    image = Image.open("raw_data/20160604_FIRE_rm-n-mobo-c/1465066440_+00840.jpg")
+    image = Image.open("test/test_big_smoke.jpg")
 
     tiled_images = tile_image(image, 4, 4)
 
-    # save each tiled image in tile_row_col
-    for row in range(4):
-        for col in range(4):
-            tiled_images[row][col].save(f"tile_{row}_{col}.jpg")
+    # Specify parameters
+    horizon_y = image.height // 2  # Example horizon x value
+    dist_above = 350  # Example distance above horizon
+    dist_below = 150  # Example distance below the horizon
+    tile_number = 5  # Example number of tiles
+    tile_width = image.width // 4  # Example tile width
+
+    # Extract tiles
+    extracted_tiles, tile_boxes = extract_tiles_from_horizon(image, horizon_y, dist_above, dist_below, tile_width, tile_number)
+
+    # Save or further process the extracted tiles as needed
+    # For example, to save each tile as a separate image:
+    for i, tile in enumerate(extracted_tiles):
+        tile.save(f"test/tile_{i}.jpg")  # Save each tile with a unique name
+    with open("test/tile_boxes.txt", "w") as f:
+        for tile_box in tile_boxes:
+            f.write(f"{tile_box}\n")

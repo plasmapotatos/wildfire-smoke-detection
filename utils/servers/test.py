@@ -1,11 +1,10 @@
 import gradio as gr
 from PIL import Image
 
-def process_batch(images):
+def process_batch(image_paths):
     # Example processing: return image sizes
-    print(images)
-    results = [image.size for image in images]
-    return results
+    images = [Image.open(image_path) for image_path in image_paths]
+    return images
 
 iface = gr.Interface(
     fn=process_batch, 

@@ -125,8 +125,8 @@ def run_on_folder(
                 ),
                 "w",
             ) as f:
-                if coords:
-                    f.write(str(coords))
+                if bbox:
+                    f.write(str(bbox))
 
 
 def run_on_series_folders(

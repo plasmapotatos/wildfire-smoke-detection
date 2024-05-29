@@ -1,0 +1,99 @@
+{
+    "true_positive_percent": 43.82690823230259,
+    "false_positive_percent": 36.85692230849567,
+    "true_negative_percent": 12.564137492621349,
+    "false_negative_percent": 6.752031966580393,
+    "average_least_seconds": 57.87943262411348,
+    "accuracy": 0.5639104572492394,
+    "precision": 0.5431932016433114,
+    "recall": 0.8665050722686058,
+    "f1_score": 0.6677736266777363,
+    "min_true_positive": 0,
+    "min_tp_folder": "20200831_FIRE_wc-n-mobo-c",
+    "min_true_negative": 0,
+    "min_tn_folder": "20160619_FIRE_lp-e-iqeye",
+    "worst_true_positives": [
+        {
+            "folder_name": "20200831_FIRE_wc-n-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20200905_ValleyFire_cp-s-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190803_Sage_om-n-mobo",
+            "true_positive": 1,
+            "false_positive": 5,
+            "true_negative": 32,
+            "false_negative": 35,
+            "least_seconds_after_smoke_tp": 720
+        },
+        {
+            "folder_name": "20191030_CopperCanyon_om-s-mobo-m",
+            "true_positive": 3,
+            "false_positive": 5,
+            "true_negative": 35,
+            "false_negative": 38,
+            "least_seconds_after_smoke_tp": 1860
+        },
+        {
+            "folder_name": "20200727_Border11Fire_om-e-mobo-m",
+            "true_positive": 3,
+            "false_positive": 9,
+            "true_negative": 31,
+            "false_negative": 32,
+            "least_seconds_after_smoke_tp": 0
+        }
+    ],
+    "worst_true_negatives": [
+        {
+            "folder_name": "20160619_FIRE_lp-e-iqeye",
+            "true_positive": 21,
+            "false_positive": 20,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20160619_FIRE_om-e-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20160619_FIRE_pi-s-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20160711_FIRE_ml-n-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20160718_FIRE_lp-n-iqeye",
+            "true_positive": 21,
+            "false_positive": 20,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        }
+    ]
+}
