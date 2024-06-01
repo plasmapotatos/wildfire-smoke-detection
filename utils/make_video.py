@@ -12,6 +12,7 @@ def create_animation(
         for img in sorted(os.listdir(image_folder))
         if img.endswith(".jpg") or img.endswith(".jpeg")
     ]
+    print(image_files)
 
     # Sort images alphabetically
     image_files.sort()
@@ -45,25 +46,30 @@ def create_animation(
 
 
 # Example usage
-image_series_path = "series_results/paligemma/tiled/4x4"
-image_folder_path = "sorted_images"  # Replace with your image folder path
-output_path = "videos/paligemma/tiled/4x4"
-output_video = "test_sorted.mp4"
+image_series_path = "frames"
+image_folder_path = "frames"  # Replace with your image folder path
+output_path = "videos/test"
+output_video = "videos/test/test.mp4"
 frame_duration_ms = 250  # Time interval for each frame in milliseconds
-resize_width = 640  # New width of the resized images (optional)
-resize_height = 480  # New height of the resized images (optional)
+resize_width = None  # New width of the resized images (optional)
+resize_height = None  # New height of the resized images (optional)
 
 series_folders = sorted(os.listdir(image_series_path))
 if not os.path.exists(output_path):
     os.makedirs(output_path)
 
-for series_folder in series_folders:
-    image_folder_path = os.path.join(image_series_path, series_folder, "stitched")
-    output_video = os.path.join(output_path, f"{series_folder}.mp4")
-    if os.path.exists(output_video):
-        print(f"Skipping {output_video} as it already exists.")
-        continue
-    print(f"Creating video for {image_folder_path}...")
-    create_animation(
-        image_folder_path, output_video, frame_duration_ms, resize_width, resize_height
-    )
+# for series_folder in series_folders:
+#     # image_folder_path = os.path.join(image_series_path, series_folder, "stitched")
+#     output_video = os.path.join(output_path, f"{series_folder}.mp4")
+#     if os.path.exists(output_video):
+#         print(f"Skipping {output_video} as it already exists.")
+#         continue
+#     print(f"Creating video for {image_folder_path}...")
+#     create_animation(
+#         image_folder_path, output_video, frame_duration_ms, resize_width, resize_height
+#     )
+
+create_animation(
+    image_folder_path, output_video, frame_duration_ms, resize_width, resize_height
+)
+print(f"Video saved to {output_video}")

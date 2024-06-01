@@ -1,19 +1,20 @@
-import os
-import json
 import ast
+import json
+import os
 import sys
-from tqdm import tqdm
 
 import numpy as np
 from PIL import Image
-from utils.image_utils import tile_image, add_border, stitch_images
-from utils.request_utils import prompt_llava_next, prompt_llava
+from tqdm import tqdm
+
+from utils.image_utils import add_border, stitch_images, tile_image
+from utils.request_utils import prompt_llava, prompt_llava_next
 
 # Constants
 num_rows = 4
 num_cols = 4
-series_folder = "raw_data"
-output_folder = f"series_results/llava/{num_rows}x{num_cols}"
+series_folder = "splits"
+output_folder = f"series_results/llava/tiled/{num_rows}x{num_cols}"
 prompt = """You are a proficient smoke detector at a fire tower. Does the following image contain wildfire smoke? Look carefully, and distinguish between clouds and smoke. Output "yes" only if there is smoke, and "no" only if there is no smoke. Be conservative, and only output "yes" if you are sure there is smoke. Reason out your logic, and enclose it in <Reasoning> <Reasoning/>. *****Do NOT go over 50 words*****. If you find yourself repeating yourself in your reasoning, stop your reasoning immediately. Then, output one line which is either "yes" or "no", enclosing it in <Output> <Output/>.
 
 *****Example Image with Smoke Reasoning*****

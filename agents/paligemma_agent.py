@@ -21,7 +21,7 @@ from utils.request_utils import prompt_llava, prompt_llava_next, prompt_paligemm
 # Constants
 num_rows = 4
 num_cols = 4
-series_folder = "raw_data"
+series_folder = "splits"
 output_folder = f"series_results/paligemma"
 prompt = """detect en Detect the smoke in the image"""
 model_name = "paligemma"

@@ -4,7 +4,9 @@ from ast import literal_eval
 
 from tqdm import tqdm
 
-model = "paligemma"
+model_name = "llava"
+mode = "horizon"
+series_folder_path = f"series_results/{model_name}/{mode}"
 
 
 def evaluate_tiles(tiled_results, image_label):
@@ -15,8 +17,11 @@ def evaluate_tiles(tiled_results, image_label):
     :param image_label: True if the image is labeled as having fire, False otherwise
     :return: One of ['true_positive', 'false_positive', 'true_negative', 'false_negative']
     """
-    tiled_results = literal_eval(tiled_results)
-    if model == "paligemma":
+    try:
+        tiled_results = literal_eval(tiled_results)
+    except:
+        pass
+    if mode == "horizon":
         if all(row == None for row in tiled_results):
             has_fire = False
         else:
@@ -68,8 +73,12 @@ def evaluate_series(series_folder, mode="tiled"):
         # print(series_path)
         if not os.path.isdir(series_path):
             continue
+        
+        if mode == "tiled":
+            raw_folder = os.path.join(series_path, "raw")
+        if mode == "horizon":
+            raw_folder = os.path.join(series_path, "bounding_boxes")
 
-        raw_folder = os.path.join(series_path, "bounding_boxes")
         if not os.path.exists(raw_folder):
             continue
 
@@ -84,6 +93,8 @@ def evaluate_series(series_folder, mode="tiled"):
         }
 
         for file_name in os.listdir(raw_folder):
+            # print(file_name)
+            print(file_name)
             if file_name.endswith("_bounding_boxes.txt"):
 
                 # Extract image label and time from file name
@@ -98,13 +109,12 @@ def evaluate_series(series_folder, mode="tiled"):
                     continue
                 if mode == "tiled":
                     file_path = os.path.join(raw_folder, file_name)
+                    # print(file_name)
+                    # print(file_path)
                     with open(file_path, "r") as file:
                         # Read the tiled results
                         tiled_results = [line.strip().split() for line in file]
-                    if mode == "horizon":
-                        with open(file_path, "r") as file:
-                            # Read the tiled results
-                            tiled_results = file.read().strip()
+                    print(tiled_results)
                     # Evaluate the image
                     evaluation = evaluate_tiles(tiled_results, image_label)
                     series_stats[evaluation] += 1
@@ -146,7 +156,4 @@ def evaluate_series(series_folder, mode="tiled"):
 
 
 # Example usage
-model_name = "paligemma"
-mode = "horizon"
-series_folder_path = f"series_results/{model_name}/{mode}"
 evaluate_series(series_folder_path, mode=mode)
