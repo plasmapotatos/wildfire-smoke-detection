@@ -74,6 +74,7 @@ def add_border(
 
     return image
 
+
 def overlay_bbox(image, bbox, color=(0, 255, 0), thickness=5):
     """
     Overlay a bounding box onto an image.
@@ -137,6 +138,7 @@ def stitch_images(image_array):
 
     return stitched_image
 
+
 def get_union_bounding_box(bounding_boxes):
     """
     Calculate the union bounding box that covers all the input bounding boxes.
@@ -180,6 +182,7 @@ def get_union_bounding_box(bounding_boxes):
     # Return the smallest covering bounding box
     return (min_xmin, min_ymin, max_xmax, max_ymax)
 
+
 def stitch_image_with_bboxes(image, bounding_boxes, tiled_boxes, union=False):
     """
     Overlays bounding boxes on the original image at their relative positions specified by tiled_boxes.
@@ -204,13 +207,13 @@ def stitch_image_with_bboxes(image, bounding_boxes, tiled_boxes, union=False):
         y_offset = tbox[1]
         if bbox is None:
             continue
-        
+
         # Adjust the bounding box coordinates by adding the offsets
         adjusted_bbox = (
             bbox[0] + x_offset,
             bbox[1] + y_offset,
             bbox[2] + x_offset,
-            bbox[3] + y_offset
+            bbox[3] + y_offset,
         )
 
         adjusted_bboxs.append(adjusted_bbox)
@@ -224,6 +227,7 @@ def stitch_image_with_bboxes(image, bounding_boxes, tiled_boxes, union=False):
             stitched_image = overlay_bbox(stitched_image, union_bbox)
 
     return stitched_image
+
 
 def union_bounding_box(bounding_boxes, num_rows, num_cols, tile_width, tile_height):
     # Initialize the extreme values
@@ -284,16 +288,22 @@ def union_bounding_box(bounding_boxes, num_rows, num_cols, tile_width, tile_heig
     # Return the smallest covering bounding box
     return (min_xmin, min_ymin, max_xmax, max_ymax)
 
+
 def extract_and_calculate_horizon(input_str, image_width, image_height):
     # Convert the loc values from strings to integers
-    xmin, ymin, xmax, ymax = extract_and_parse_coordinates(input_str, image_width, image_height)
+    xmin, ymin, xmax, ymax = extract_and_parse_coordinates(
+        input_str, image_width, image_height
+    )
 
     # Calculate the adjusted xmax
     horizon_y = ymax
-    
+
     return horizon_y
 
-def extract_tiles_from_horizon(image, horizon_y, dist_above, dist_below, tile_width, tile_number):
+
+def extract_tiles_from_horizon(
+    image, horizon_y, dist_above, dist_below, tile_width, tile_number
+):
     # Calculate the total height of the tiles region
     total_height = dist_above + dist_below
 
@@ -308,18 +318,21 @@ def extract_tiles_from_horizon(image, horizon_y, dist_above, dist_below, tile_wi
     tile_boxes = []
 
     # Iterate through the x-coordinates
-    for x in range(0, image.width - tile_width + 1, (image.width - tile_width) // (tile_number - 1)):
+    for x in range(
+        0, image.width - tile_width + 1, (image.width - tile_width) // (tile_number - 1)
+    ):
         # Extract the tile from the image
         tile_box = (x, start_y, x + tile_width, end_y)
- 
+
         tile_boxes.append(tile_box)
-        
+
         # Extract the tile from the image
         tile = image.crop(tile_box)
         # Append the tile to the tiles array
         tiles.append(tile)
 
     return tiles, tile_boxes
+
 
 def draw_horizontal_line(image, x, line_color=(255, 0, 0), line_thickness=1):
     """
@@ -437,25 +450,21 @@ def parse_xml(xml_file):
 
 
 if __name__ == "__main__":
-    # Load an image
-    image = Image.open("test/test_big_smoke.jpg")
-
-    tiled_images = tile_image(image, 4, 4)
+    image = Image.open("test/test.jpg")
 
     # Specify parameters
     horizon_y = image.height // 2  # Example horizon x value
-    dist_above = 350  # Example distance above horizon
-    dist_below = 150  # Example distance below the horizon
-    tile_number = 5  # Example number of tiles
+    dist_above = 400  # Example distance above horizon
+    dist_below = 300  # Example distance below the horizon
+    tile_number = 7  # Example number of tiles
     tile_width = image.width // 4  # Example tile width
 
     # Extract tiles
-    extracted_tiles, tile_boxes = extract_tiles_from_horizon(image, horizon_y, dist_above, dist_below, tile_width, tile_number)
+    extracted_tiles, tile_boxes = extract_tiles_from_horizon(
+        image, horizon_y, dist_above, dist_below, tile_width, tile_number
+    )
 
     # Save or further process the extracted tiles as needed
     # For example, to save each tile as a separate image:
     for i, tile in enumerate(extracted_tiles):
         tile.save(f"test/tile_{i}.jpg")  # Save each tile with a unique name
-    with open("test/tile_boxes.txt", "w") as f:
-        for tile_box in tile_boxes:
-            f.write(f"{tile_box}\n")

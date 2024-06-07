@@ -1,0 +1,99 @@
+{
+    "true_positive_percent": 14.262295081967213,
+    "false_positive_percent": 0.2254098360655738,
+    "true_negative_percent": 50.43032786885245,
+    "false_negative_percent": 35.08196721311476,
+    "average_least_seconds": 619.4722222222222,
+    "accuracy": 0.6469262295081967,
+    "precision": 0.9844413012729845,
+    "recall": 0.28903654485049834,
+    "f1_score": 0.4468699839486357,
+    "min_true_positive": 0,
+    "min_tp_folder": "20180813_FIRE_bh-s-mobo-c",
+    "min_true_negative": 21,
+    "min_tn_folder": "20160718_FIRE_lp-n-iqeye",
+    "worst_true_positives": [
+        {
+            "folder_name": "20180813_FIRE_bh-s-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 41,
+            "false_negative": 40,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190801_Caliente_om-w-mobo",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 41,
+            "false_negative": 40,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190826_FIRE_rm-w-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 40,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190827_FIRE_so-w-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 41,
+            "false_negative": 40,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190913_FIRE_lp-n-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 40,
+            "least_seconds_after_smoke_tp": null
+        }
+    ],
+    "worst_true_negatives": [
+        {
+            "folder_name": "20160718_FIRE_lp-n-iqeye",
+            "true_positive": 2,
+            "false_positive": 0,
+            "true_negative": 21,
+            "false_negative": 18,
+            "least_seconds_after_smoke_tp": 720
+        },
+        {
+            "folder_name": "20200930_DeLuzFire_rm-w-mobo-c",
+            "true_positive": 4,
+            "false_positive": 0,
+            "true_negative": 21,
+            "false_negative": 36,
+            "least_seconds_after_smoke_tp": 2220
+        },
+        {
+            "folder_name": "20200806_SpringsFire_sm-e-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 26,
+            "false_negative": 39,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20200905_ValleyFire_lp-n-mobo-c",
+            "true_positive": 31,
+            "false_positive": 11,
+            "true_negative": 30,
+            "false_negative": 1,
+            "least_seconds_after_smoke_tp": 60
+        },
+        {
+            "folder_name": "20200808_OliveFire_wc-e-mobo-c",
+            "true_positive": 10,
+            "false_positive": 0,
+            "true_negative": 38,
+            "false_negative": 26,
+            "least_seconds_after_smoke_tp": 1140
+        }
+    ]
+}

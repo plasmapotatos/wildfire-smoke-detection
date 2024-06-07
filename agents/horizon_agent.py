@@ -19,26 +19,45 @@ from utils.image_utils import (
     tile_image,
     union_bounding_box,
 )
-from utils.prompts import PALIGEMMA_DETECT_PROMPT, PALIGEMMA_SEGMENT_PROMPT, LLAVA_PROMPT
-from utils.request_utils import prompt_llava, prompt_llava_next, prompt_paligemma
+from utils.prompts import (
+    LLAVA_PROMPT,
+    PALIGEMMA_DETECT_PROMPT,
+    PALIGEMMA_SEGMENT_PROMPT,
+    PHI3_ASSISTANT,
+    PHI3_PROMPT,
+)
+from utils.request_utils import (
+    prompt_llava,
+    prompt_llava_next,
+    prompt_paligemma,
+    prompt_phi3,
+)
 
 # Constants
+image = Image.open("test/false_neg_frame1.jpg")
+
+# Specify parameters
+dist_above = 400  # Example distance above horizon
+dist_below = 300  # Example distance below the horizon
+tile_number = 7  # Example number of tiles
+tile_width = image.width // 4  # Example tile width
 num_rows = 4
 num_cols = 4
-series_folder = "splits"
-model_name = "llava"
+series_folder = "splits/test"
+model_name = "phi3"
 mode = "horizon"
-output_folder = f"series_results/{model_name}/{mode}"
+output_folder = f"series_results/{model_name}/{mode}/{tile_number}x{tile_width}"
 horizon_y_sum = 0
 num_images = 0
 
-if model_name == "paligemma":
+if model_name == "paligemma" or model_name == "phi3":
     client = Client("http://127.0.0.1:7860/")
 
 
 def extract_answer(output):
     answer = output.split("<output>")[1].split("<output/>")[0].strip()
     return answer
+
 
 def get_bounding_boxes_and_tiles(results, tile_boxes):
     """
@@ -63,6 +82,7 @@ def get_bounding_boxes_and_tiles(results, tile_boxes):
             original_tile_boxes.append(tile)
 
     return scaled_bounding_boxes, original_tile_boxes
+
 
 def run_on_image_paligemma(image, dist_above, dist_below, tile_width, tile_number):
     # Get horizon
@@ -107,6 +127,56 @@ def run_on_image_paligemma(image, dist_above, dist_below, tile_width, tile_numbe
 
     return stitched_image, bboxes, tile_boxes
 
+
+def run_on_image_phi3(image, dist_above, dist_below, tile_width, tile_number):
+    # Get horizon
+    # segment_response = prompt_paligemma(
+    #     PALIGEMMA_SEGMENT_PROMPT, images=[image], client=client
+    # )[0]
+    # horizon_y_new = extract_and_calculate_horizon(
+    #     segment_response, image.width, image.height
+    # )
+    global horizon_y_sum
+    global num_images
+    # horizon_y_sum += horizon_y_new
+    # num_images += 1
+    # horizon_y = horizon_y_sum // num_images
+    # if horizon_y < image.height // 2 - 100 or horizon_y > image.height // 2 + 100:
+    #     print(
+    #         f"Possibly incorrect horizon detection: {horizon_y} out of {image.height}"
+    #     )
+    # print("new: ", horizon_y_new)
+    # print("sum: ", horizon_y_sum)
+    # print("num: ", num_images)
+    horizon_y = image.height // 2
+    # Get tiled images
+    extracted_tiles, tile_boxes = extract_tiles_from_horizon(
+        image, horizon_y, dist_above, dist_below, tile_width, tile_number
+    )
+    for i, tile in enumerate(extracted_tiles):
+        tile.save(f"test/tile_{i}.jpg")
+    # Run detection on each tiled image
+    detect_responses = prompt_phi3(
+        PHI3_PROMPT, PHI3_ASSISTANT, images=extracted_tiles, client=client
+    )
+    print(detect_responses)
+    # Extract and parse coordinates
+    parsed_responses = [response.lower() for response in detect_responses]
+
+    print(parsed_responses)
+
+    # Extract bounding boxes
+    bounding_boxes, new_tile_boxes = get_bounding_boxes_and_tiles(
+        parsed_responses, tile_boxes
+    )
+
+    print(bounding_boxes)
+    stitched_image = stitch_image_with_bboxes(
+        image, bounding_boxes, new_tile_boxes, union=True
+    )
+    return stitched_image, bounding_boxes, new_tile_boxes
+
+
 def run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number):
     horizon_y = image.height // 2
     # Get tiled images
@@ -116,17 +186,23 @@ def run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number):
     for i, tile in enumerate(extracted_tiles):
         tile.save(f"test/tile_{i}.jpg")
     # Run detection on each tiled image
-    detect_responses = ast.literal_eval(prompt_llava(LLAVA_PROMPT, images=extracted_tiles))
+    detect_responses = ast.literal_eval(
+        prompt_llava(LLAVA_PROMPT, images=extracted_tiles)
+    )
 
     parsed_responses = [response.lower() for response in detect_responses]
 
     print(parsed_responses)
 
     # Extract bounding boxes
-    bounding_boxes, new_tile_boxes = get_bounding_boxes_and_tiles(parsed_responses, tile_boxes)
+    bounding_boxes, new_tile_boxes = get_bounding_boxes_and_tiles(
+        parsed_responses, tile_boxes
+    )
 
     print(bounding_boxes)
-    stitched_image = stitch_image_with_bboxes(image, bounding_boxes, new_tile_boxes, union=True)
+    stitched_image = stitch_image_with_bboxes(
+        image, bounding_boxes, new_tile_boxes, union=True
+    )
     return stitched_image, bounding_boxes, new_tile_boxes
 
 
@@ -171,6 +247,10 @@ def run_on_folder(
             )
         if model_name == "llava":
             stitched_image, bounding_boxes, tile_boxes = run_on_image_llava(
+                image, dist_above, dist_below, tile_width, tile_number
+            )
+        if model_name == "phi3":
+            stitched_image, bounding_boxes, tile_boxes = run_on_image_phi3(
                 image, dist_above, dist_below, tile_width, tile_number
             )
 
@@ -237,16 +317,8 @@ def run_on_series_folders(
 #     series_folder, output_folder, prompt, num_rows, num_cols, mode="tiled"
 # )
 
-image = Image.open("test/false_negative.jpg")
-
-# Specify parameters
-dist_above = 400  # Example distance above horizon
-dist_below = 400  # Example distance below the horizon
-tile_number = 5  # Example number of tiles
-tile_width = image.width // 4  # Example tile width
-
-image, _, _ = run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number)
-image.save("test/stitched.jpg")
+# image, _, _ = run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number)
+# image.save("test/stitched.jpg")
 
 run_on_series_folders(
     series_folder,

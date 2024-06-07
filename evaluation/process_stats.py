@@ -73,6 +73,28 @@ def process_data(data, num_worst_tp, num_worst_tn):
     worst_true_positives = sorted(data, key=lambda x: x["true_positive"])[:num_worst_tp]
     worst_true_negatives = sorted(data, key=lambda x: x["true_negative"])[:num_worst_tn]
 
+    # Calculate false positive and false negative ratios
+    for entry in data:
+        total_actual_negatives = entry["false_positive"] + entry["true_negative"]
+        total_actual_positives = entry["true_positive"] + entry["false_negative"]
+        entry["false_positive_ratio"] = (
+            entry["false_positive"] / total_actual_negatives
+            if total_actual_negatives > 0
+            else 0
+        )
+        entry["false_negative_ratio"] = (
+            entry["false_negative"] / total_actual_positives
+            if total_actual_positives > 0
+            else 0
+        )
+
+    worst_false_positive_ratios = sorted(
+        data, key=lambda x: x["false_positive_ratio"], reverse=True
+    )[:5]
+    worst_false_negative_ratios = sorted(
+        data, key=lambda x: x["false_negative_ratio"], reverse=True
+    )[:5]
+
     return {
         "true_positive_percent": true_positive_percent,
         "false_positive_percent": false_positive_percent,
@@ -89,6 +111,8 @@ def process_data(data, num_worst_tp, num_worst_tn):
         "min_tn_folder": min_tn_folder,
         "worst_true_positives": worst_true_positives,
         "worst_true_negatives": worst_true_negatives,
+        "worst_false_positive_ratios": worst_false_positive_ratios,
+        "worst_false_negative_ratios": worst_false_negative_ratios,
     }
 
 
@@ -98,7 +122,7 @@ def save_results_to_json(results, output_file):
 
 
 def main():
-    file_path = "series_results/llava/horizon/series_evaluation_stats.json"
+    file_path = "series_results/phi3/horizon/7x512/series_evaluation_stats.json"
     output_file = "processed_results.json"
 
     num_worst_tp = 5  # Number of worst-performing true positives
@@ -134,6 +158,12 @@ def main():
     )
     print(
         f"Worst-performing True Negatives (Top {num_worst_tn}): {[entry['folder_name'] for entry in results['worst_true_negatives']]}"
+    )
+    print(
+        f"Worst False Positive Ratios (Top 5): {[entry['folder_name'] for entry in results['worst_false_positive_ratios']]}"
+    )
+    print(
+        f"Worst False Negative Ratios (Top 5): {[entry['folder_name'] for entry in results['worst_false_negative_ratios']]}"
     )
 
 

@@ -1,0 +1,99 @@
+{
+    "true_positive_percent": 37.72540983606557,
+    "false_positive_percent": 8.75,
+    "true_negative_percent": 40.65573770491803,
+    "false_negative_percent": 12.868852459016395,
+    "average_least_seconds": 296.3606557377049,
+    "accuracy": 0.7838114754098361,
+    "precision": 0.8117283950617284,
+    "recall": 0.7456460105305792,
+    "f1_score": 0.7772852016043911,
+    "min_true_positive": 0,
+    "min_tp_folder": "20200601_WILDLAND-DRILLS_om-e-mobo-c",
+    "min_true_negative": 0,
+    "min_tn_folder": "20200806_BorderFire_lp-s-mobo-c",
+    "worst_true_positives": [
+        {
+            "folder_name": "20200601_WILDLAND-DRILLS_om-e-mobo-c",
+            "true_positive": 0,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 41,
+            "least_seconds_after_smoke_tp": null
+        },
+        {
+            "folder_name": "20190826_FIRE_rm-w-mobo-c",
+            "true_positive": 1,
+            "false_positive": 0,
+            "true_negative": 39,
+            "false_negative": 40,
+            "least_seconds_after_smoke_tp": 1080
+        },
+        {
+            "folder_name": "20190827_FIRE_so-w-mobo-c",
+            "true_positive": 1,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 40,
+            "least_seconds_after_smoke_tp": 2340
+        },
+        {
+            "folder_name": "20190925_FIRE_wc-s-mobo-c",
+            "true_positive": 3,
+            "false_positive": 5,
+            "true_negative": 35,
+            "false_negative": 38,
+            "least_seconds_after_smoke_tp": 360
+        },
+        {
+            "folder_name": "20200306_FIRE_pi-n-mobo-c",
+            "true_positive": 5,
+            "false_positive": 0,
+            "true_negative": 40,
+            "false_negative": 36,
+            "least_seconds_after_smoke_tp": 2160
+        }
+    ],
+    "worst_true_negatives": [
+        {
+            "folder_name": "20200806_BorderFire_lp-s-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20200806_BorderFire_om-e-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20200829_inside-Mexico_om-e-mobo-c",
+            "true_positive": 41,
+            "false_positive": 40,
+            "true_negative": 0,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20200806_SpringsFire_sm-e-mobo-c",
+            "true_positive": 33,
+            "false_positive": 24,
+            "true_negative": 1,
+            "false_negative": 7,
+            "least_seconds_after_smoke_tp": 0
+        },
+        {
+            "folder_name": "20200828_BorderFire_sm-s-mobo-c",
+            "true_positive": 41,
+            "false_positive": 39,
+            "true_negative": 1,
+            "false_negative": 0,
+            "least_seconds_after_smoke_tp": 0
+        }
+    ]
+}

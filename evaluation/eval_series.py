@@ -4,9 +4,9 @@ from ast import literal_eval
 
 from tqdm import tqdm
 
-model_name = "llava"
+model_name = "phi3"
 mode = "horizon"
-series_folder_path = f"series_results/{model_name}/{mode}"
+series_folder_path = f"series_results/{model_name}/{mode}/7x512"
 
 
 def evaluate_tiles(tiled_results, image_label):
@@ -73,7 +73,7 @@ def evaluate_series(series_folder, mode="tiled"):
         # print(series_path)
         if not os.path.isdir(series_path):
             continue
-        
+
         if mode == "tiled":
             raw_folder = os.path.join(series_path, "raw")
         if mode == "horizon":
@@ -100,13 +100,14 @@ def evaluate_series(series_folder, mode="tiled"):
                 # Extract image label and time from file name
                 parts = file_name.split("_")
                 label_part = parts[1]
-                image_label = label_part.startswith("+")
+                time_seconds = int(parts[1][0:])
+                image_label = label_part.startswith("+") and time_seconds > 0
                 # print(image_label)
-                # print(parts, parts[1][0:])
-                try:
-                    time_seconds = int(parts[1][0:])
-                except:
-                    continue
+                # # print(parts, parts[1][0:])
+                # try:
+                #     time_seconds = int(parts[1][0:])
+                # except:
+                #     continue
                 if mode == "tiled":
                     file_path = os.path.join(raw_folder, file_name)
                     # print(file_name)

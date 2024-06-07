@@ -29,7 +29,7 @@
             "false_negative": 41,
             "least_seconds_after_smoke_tp": null
         },
-        {
+        { 
             "folder_name": "20200601_WILDLAND-DRILLS_om-e-mobo-c",
             "true_positive": 0,
             "false_positive": 0,

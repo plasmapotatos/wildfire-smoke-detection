@@ -1,17 +1,28 @@
+import ast
 import base64
 import json
 import socket
 import tempfile
 from io import BytesIO
-import ast
 
 import numpy as np
 import requests
 from gradio_client import Client, file
 from PIL import Image
 
-from utils.image_utils import extract_and_parse_coordinates, overlay_bbox, extract_and_calculate_horizon, stitch_image_with_bboxes, stitch_image_with_bboxes
-from utils.prompts import LLAVA_PROMPT, PALIGEMMA_DETECT_PROMPT, PALIGEMMA_SEGMENT_PROMPT
+from utils.image_utils import (
+    extract_and_calculate_horizon,
+    extract_and_parse_coordinates,
+    overlay_bbox,
+    stitch_image_with_bboxes,
+)
+from utils.prompts import (
+    LLAVA_PROMPT,
+    PALIGEMMA_DETECT_PROMPT,
+    PALIGEMMA_SEGMENT_PROMPT,
+    PHI3_ASSISTANT,
+    PHI3_PROMPT,
+)
 
 
 def to_base_64(image):
@@ -178,42 +189,79 @@ def prompt_paligemma(prompt, image_paths=None, images=None, client=None):
     return results
 
 
-prompt = """You are a proficient smoke detector at a fire tower. Does the following image contain wildfire smoke? Look carefully, and distinguish between clouds and smoke. Output "yes" only if there is smoke, and "no" only if there is no smoke. Be conservative, and only output "yes" if you are sure there is smoke. Reason out your logic, and enclose it in <Reasoning> <Reasoning/>. *****Do NOT go over 50 words*****. If you find yourself repeating yourself in your reasoning, stop your reasoning immediately. Then, output one line which is either "yes" or "no", enclosing it in <Output> <Output/>."""
+def prompt_phi3(prompt, assistant, image_paths=None, images=None, client=None):
+    if not client:
+        client = Client("http://127.0.0.1:7860/")
 
-temp = """You are a proficient smoke detector at a fire tower. Does the following image contain wildfire smoke? Look carefully, and distinguish between clouds and smoke. Reason out your logic, and enclose it in <Reasoning> <Reasoning/>. *****Do NOT go over 50 words*****. If you find yourself repeating yourself in your reasoning, stop your reasoning immediately. Then, output one line which is either "yes" or "no", enclosing it in <Output> <Output/>.
+    results = []
+    if images is not None:
+        for image in images:
+            with tempfile.NamedTemporaryFile(delete=True, suffix=".jpg") as temp:
+                # Save the image to the temporary file
+                image.save(temp, format="JPEG")
+                temp.flush()
+                try:
+                    output = client.predict(
+                        prompt=prompt,
+                        assistant=assistant,
+                        image=file(temp.name),
+                        api_name="/predict",
+                    )
+                    results.append(output)
+                except requests.exceptions.RequestException as e:
+                    print("Error:", e)
+    else:
+        for image_path in image_paths:
+            try:
+                output = client.predict(
+                    prompt=prompt,
+                    assistant=assistant,
+                    image=file(image_path),
+                    api_name="/predict",
+                )
+                results.append(output)
+            except requests.exceptions.RequestException as e:
+                print("Error:", e)
 
-*****Example Image with Smoke Reasoning*****
-The image shows a large plume of dark smoke rising from the mountains, which is indicative of a wildfire. The smoke is distinct from the surrounding clouds and vegetation, and its presence suggests a fire is occurring. The smoke is not a natural occurrence in this context, and its presence is a clear indication of a wildfire. The smoke is not a cloud, as it is not associated with precipitation or weather patterns.
-*****End of Example Image with Smoke Reasoning*****
+    return results
 
-*****Example Image without Smoke Reasoning*****
-The image shows a clear blue sky with no visible signs of smoke or haze. The sky is devoid of any particles or discoloration that would indicate the presence of wildfire smoke. The absence of any visible signs of smoke or haze leads to the conclusion that there is no wildfire smoke present in the image
-*****End of Example Image without Smoke Reasoning*****
 
-Remember to keep your reasoning concise, not more than 50 words, and end with a <Output> tag enclosing your final answer, for example <Output>yes<Output/> or <Output>no<Output/>."""
-
-test = """"You are a proficient smoke detector at a fire tower. Does the following image contain wildfire smoke? Look carefully, and distinguish between clouds and smoke. Reason out your logic. Then, output one line which is either "yes" or "no".
-"""
+assistant = """You are given an image of a horizon scene. Your task is to determine if there is smoke in the image. Look for any smoke-like objects that seem to expand in size, as this could indicate the presence of smoke. Output "yes" if you see smoke, and "no" otherwise. Additionally, output a floating point number between 0 and 1 to indicate your confidence level. A value closer to 1 indicates higher confidence in your answer."""
 
 if __name__ == "__main__":
-    # Open the file in read mode
-    with open('test/tile_boxes.txt', 'r') as tile_boxes_file:
-        tile_boxes = [ast.literal_eval(line.strip().strip('"')) for line in tile_boxes_file]
-    images = []
-    original_image = Image.open("test/test_smoke.jpg")
-    for i in range(10):
-        image = Image.open(f"test/tile_{i}.jpg")
-        images.append(image)
-    segment_responses = prompt_paligemma(PALIGEMMA_SEGMENT_PROMPT, images=images)
-    print(segment_responses)
-    detect_responses = prompt_paligemma(PALIGEMMA_DETECT_PROMPT, images=images)
-    horizon_xs = [extract_and_calculate_horizon(segment_response, images[0].width, images[0].height) for segment_response in segment_responses]
-    bboxs = [extract_and_parse_coordinates(detect_response, images[0].width, images[0].height) for detect_response in detect_responses]
-    print(horizon_xs)
-    print(tile_boxes)
-    print(bboxs)
-    stitched_image = stitch_image_with_bboxes(original_image, bboxs, tile_boxes)
-    stitched_image.save("test/stitched_image.jpg")
+    image = Image.open("test/tile_3.jpg")
+    responses = prompt_phi3(PHI3_PROMPT, PHI3_ASSISTANT, images=[image])
+    print(responses)
+    # # Open the file in read mode
+    # with open("test/tile_boxes.txt", "r") as tile_boxes_file:
+    #     tile_boxes = [
+    #         ast.literal_eval(line.strip().strip('"')) for line in tile_boxes_file
+    #     ]
+    # images = []
+    # original_image = Image.open("test/test_smoke.jpg")
+    # for i in range(10):
+    #     image = Image.open(f"test/tile_{i}.jpg")
+    #     images.append(image)
+    # segment_responses = prompt_paligemma(PALIGEMMA_SEGMENT_PROMPT, images=images)
+    # print(segment_responses)
+    # detect_responses = prompt_paligemma(PALIGEMMA_DETECT_PROMPT, images=images)
+    # horizon_xs = [
+    #     extract_and_calculate_horizon(
+    #         segment_response, images[0].width, images[0].height
+    #     )
+    #     for segment_response in segment_responses
+    # ]
+    # bboxs = [
+    #     extract_and_parse_coordinates(
+    #         detect_response, images[0].width, images[0].height
+    #     )
+    #     for detect_response in detect_responses
+    # ]
+    # print(horizon_xs)
+    # print(tile_boxes)
+    # print(bboxs)
+    # stitched_image = stitch_image_with_bboxes(original_image, bboxs, tile_boxes)
+    # stitched_image.save("test/stitched_image.jpg")
     # # image_bytes = BytesIO()
     # image = Image.open("test/test.jpg")
     # response = prompt_paligemma(PALIGEMMA_PROMPT, images=[image])
