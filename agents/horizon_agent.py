@@ -25,28 +25,32 @@ from utils.prompts import (
     PALIGEMMA_SEGMENT_PROMPT,
     PHI3_ASSISTANT,
     PHI3_PROMPT,
+    GPT4_BASIC_PROMPT,
+    GPT4_REASONING_PROMPT,
 )
 from utils.request_utils import (
     prompt_llava,
     prompt_llava_next,
     prompt_paligemma,
     prompt_phi3,
+    prompt_gpt4,
 )
 
 # Constants
-image = Image.open("test/false_neg_frame1.jpg")
+image = Image.open("test/nemo_test.jpg")
 
 # Specify parameters
 dist_above = 400  # Example distance above horizon
 dist_below = 300  # Example distance below the horizon
-tile_number = 7  # Example number of tiles
-tile_width = image.width // 4  # Example tile width
+tile_number = 5  # Example number of tiles
+num_tiles = 4
+tile_width = image.width // num_tiles  # Example tile width
 num_rows = 4
 num_cols = 4
 series_folder = "splits/test"
-model_name = "phi3"
+model_name = "gpt4"
 mode = "horizon"
-output_folder = f"series_results/{model_name}/{mode}/{tile_number}x{tile_width}"
+output_folder = f"series_results/{model_name}/{mode}/{tile_number}x{num_tiles}"
 horizon_y_sum = 0
 num_images = 0
 
@@ -75,7 +79,7 @@ def get_bounding_boxes_and_tiles(results, tile_boxes):
     original_tile_boxes = []
 
     for result, tile in zip(results, tile_boxes):
-        if result == "yes":
+        if result[:3] == "yes":
             xmin, ymin, xmax, ymax = tile
             scaled_box = [0, 0, xmax - xmin, ymax - ymin]
             scaled_bounding_boxes.append(scaled_box)
@@ -89,9 +93,9 @@ def run_on_image_paligemma(image, dist_above, dist_below, tile_width, tile_numbe
     segment_response = prompt_paligemma(
         PALIGEMMA_SEGMENT_PROMPT, images=[image], client=client
     )[0]
-    horizon_y_new = extract_and_calculate_horizon(
-        segment_response, image.width, image.height
-    )
+    # horizon_y_new = extract_and_calculate_horizon(
+    #     segment_response, image.width, image.height
+    # )
     global horizon_y_sum
     global num_images
     # horizon_y_sum += horizon_y_new
@@ -123,9 +127,11 @@ def run_on_image_paligemma(image, dist_above, dist_below, tile_width, tile_numbe
         for detect_response in detect_responses
     ]
 
-    stitched_image = stitch_image_with_bboxes(image, bboxes, tile_boxes, union=True)
+    union_bbox, stitched_image = stitch_image_with_bboxes(
+        image, bboxes, tile_boxes, union=True
+    )
 
-    return stitched_image, bboxes, tile_boxes
+    return detect_responses, union_bbox, stitched_image, bboxes, tile_boxes
 
 
 def run_on_image_phi3(image, dist_above, dist_below, tile_width, tile_number):
@@ -171,10 +177,10 @@ def run_on_image_phi3(image, dist_above, dist_below, tile_width, tile_number):
     )
 
     print(bounding_boxes)
-    stitched_image = stitch_image_with_bboxes(
+    union_bbox, stitched_image = stitch_image_with_bboxes(
         image, bounding_boxes, new_tile_boxes, union=True
     )
-    return stitched_image, bounding_boxes, new_tile_boxes
+    return parsed_responses, stitched_image, bounding_boxes, new_tile_boxes
 
 
 def run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number):
@@ -200,11 +206,38 @@ def run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number):
     )
 
     print(bounding_boxes)
-    stitched_image = stitch_image_with_bboxes(
+    union_bbox, stitched_image = stitch_image_with_bboxes(
         image, bounding_boxes, new_tile_boxes, union=True
     )
-    return stitched_image, bounding_boxes, new_tile_boxes
+    return parsed_responses, union_bbox, stitched_image, bounding_boxes, new_tile_boxes
 
+def run_on_image_gpt4(image, dist_above, dist_below, tile_width, tile_number):
+    horizon_y = image.height // 2
+    # Get tiled images
+    extracted_tiles, tile_boxes = extract_tiles_from_horizon(
+        image, horizon_y, dist_above, dist_below, tile_width, tile_number
+    )
+    for i, tile in enumerate(extracted_tiles):
+        tile.save(f"test/tile_{i}.jpg")
+    # Run detection on each tiled image
+    detect_responses = prompt_gpt4(GPT4_BASIC_PROMPT, images=extracted_tiles)
+
+    print(detect_responses, detect_responses[0])
+
+    parsed_responses = [response.lower() for response in detect_responses]
+
+    print(parsed_responses)
+
+    # Extract bounding boxes
+    bounding_boxes, new_tile_boxes = get_bounding_boxes_and_tiles(
+        parsed_responses, tile_boxes
+    )
+
+    print(bounding_boxes)
+    union_bbox, stitched_image = stitch_image_with_bboxes(
+        image, bounding_boxes, new_tile_boxes, union=True
+    )
+    return parsed_responses, union_bbox, stitched_image, bounding_boxes, new_tile_boxes
 
 def run_on_folder(
     image_folder, output_folder, dist_above, dist_below, tile_width, tile_number
@@ -213,9 +246,13 @@ def run_on_folder(
     stitched_folder = os.path.join(output_folder, "stitched")
     bounding_box_folder = os.path.join(output_folder, "bounding_boxes")
     tile_box_folder = os.path.join(output_folder, "tile_boxes")
+    results_folder = os.path.join(output_folder, "results")
+    union_bounding_box_folder = os.path.join(output_folder, "union_bounding_boxes")
     os.makedirs(stitched_folder, exist_ok=True)
     os.makedirs(bounding_box_folder, exist_ok=True)
     os.makedirs(tile_box_folder, exist_ok=True)
+    os.makedirs(results_folder, exist_ok=True)
+    os.makedirs(union_bounding_box_folder, exist_ok=True)
 
     # Get list of image files
     image_files = os.listdir(image_folder)
@@ -223,6 +260,7 @@ def run_on_folder(
     global num_images
     horizon_y_sum = 0
     num_images = 0
+    print(image_files)
     for image_file in tqdm(image_files):
         # check if image is an image
         if not image_file.endswith(".jpg") and not image_file.endswith(".jpeg"):
@@ -242,16 +280,40 @@ def run_on_folder(
 
         tqdm.write(f"Processing image: {image_file}")
         if model_name == "paligemma":
-            stitched_image, bounding_boxes, tile_boxes = run_on_image_paligemma(
+            (
+                parsed_results,
+                union_bounding_box,
+                stitched_image,
+                bounding_boxes,
+                tile_boxes,
+            ) = run_on_image_paligemma(
                 image, dist_above, dist_below, tile_width, tile_number
             )
         if model_name == "llava":
-            stitched_image, bounding_boxes, tile_boxes = run_on_image_llava(
+            (
+                parsed_results,
+                union_bounding_box,
+                stitched_image,
+                bounding_boxes,
+                tile_boxes,
+            ) = run_on_image_llava(
+                image, dist_above, dist_below, tile_width, tile_number
+            )
+        if model_name == "gpt4":
+            (
+                parsed_results,
+                union_bounding_box,
+                stitched_image,
+                bounding_boxes,
+                tile_boxes,
+            ) = run_on_image_gpt4(
                 image, dist_above, dist_below, tile_width, tile_number
             )
         if model_name == "phi3":
-            stitched_image, bounding_boxes, tile_boxes = run_on_image_phi3(
-                image, dist_above, dist_below, tile_width, tile_number
+            parsed_results, stitched_image, bounding_boxes, tile_boxes = (
+                run_on_image_phi3(
+                    image, dist_above, dist_below, tile_width, tile_number
+                )
             )
 
         # Save stitched image
@@ -263,11 +325,24 @@ def run_on_folder(
         ) as f:
             f.write(str(bounding_boxes))
 
+        # Save union bounding box
+        with open(
+            os.path.join(
+                union_bounding_box_folder, f"{image_name}_union_bounding_box.txt"
+            ),
+            "w",
+        ) as f:
+            f.write(str(union_bounding_box))
+
         # Save tile boxes
         with open(
             os.path.join(tile_box_folder, f"{image_name}_tile_boxes.txt"), "w"
         ) as f:
             f.write(str(tile_boxes))
+
+        # Save results
+        with open(os.path.join(results_folder, f"{image_name}_results.txt"), "w") as f:
+            f.write(str(parsed_results))
 
 
 def run_on_series_folders(
@@ -317,7 +392,9 @@ def run_on_series_folders(
 #     series_folder, output_folder, prompt, num_rows, num_cols, mode="tiled"
 # )
 
-# image, _, _ = run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number)
+# _, _, image, _, _ = run_on_image_paligemma(
+#     image, dist_above, dist_below, tile_width, tile_number
+# )
 # image.save("test/stitched.jpg")
 
 run_on_series_folders(
@@ -328,3 +405,14 @@ run_on_series_folders(
     tile_width,
     tile_number,
 )
+
+# folder_path = "splits/validation"
+
+# run_on_folder(
+#     folder_path,
+#     output_folder,
+#     dist_above,
+#     dist_below,
+#     tile_width,
+#     tile_number,
+# )

@@ -220,13 +220,14 @@ def stitch_image_with_bboxes(image, bounding_boxes, tiled_boxes, union=False):
         # Overlay the bounding box on the stitched image using the overlay_bbox function
         if not union:
             stitched_image = overlay_bbox(stitched_image, adjusted_bbox)
+    union_bbox = None
 
     if union:
         union_bbox = get_union_bounding_box(adjusted_bboxs)
         if union_bbox is not None:
             stitched_image = overlay_bbox(stitched_image, union_bbox)
 
-    return stitched_image
+    return union_bbox, stitched_image
 
 
 def union_bounding_box(bounding_boxes, num_rows, num_cols, tile_width, tile_height):
@@ -450,12 +451,12 @@ def parse_xml(xml_file):
 
 
 if __name__ == "__main__":
-    image = Image.open("test/test.jpg")
+    image = Image.open("test/false_negatives/1.jpg")
 
     # Specify parameters
     horizon_y = image.height // 2  # Example horizon x value
     dist_above = 400  # Example distance above horizon
-    dist_below = 300  # Example distance below the horizon
+    dist_below = 400  # Example distance below the horizon
     tile_number = 7  # Example number of tiles
     tile_width = image.width // 4  # Example tile width
 

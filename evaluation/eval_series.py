@@ -4,9 +4,9 @@ from ast import literal_eval
 
 from tqdm import tqdm
 
-model_name = "phi3"
+model_name = "gpt4"
 mode = "horizon"
-series_folder_path = f"series_results/{model_name}/{mode}/7x512"
+series_folder_path = f"series_results/{model_name}/{mode}/5x4"
 
 
 def evaluate_tiles(tiled_results, image_label):

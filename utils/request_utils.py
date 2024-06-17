@@ -3,7 +3,9 @@ import base64
 import json
 import socket
 import tempfile
+from datetime import datetime
 from io import BytesIO
+import os
 
 import numpy as np
 import requests
@@ -22,6 +24,8 @@ from utils.prompts import (
     PALIGEMMA_SEGMENT_PROMPT,
     PHI3_ASSISTANT,
     PHI3_PROMPT,
+    GPT4_BASIC_PROMPT,
+    GPT4_REASONING_PROMPT,
 )
 
 
@@ -226,12 +230,83 @@ def prompt_phi3(prompt, assistant, image_paths=None, images=None, client=None):
     return results
 
 
-assistant = """You are given an image of a horizon scene. Your task is to determine if there is smoke in the image. Look for any smoke-like objects that seem to expand in size, as this could indicate the presence of smoke. Output "yes" if you see smoke, and "no" otherwise. Additionally, output a floating point number between 0 and 1 to indicate your confidence level. A value closer to 1 indicates higher confidence in your answer."""
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
+def prompt_gpt4(prompt, image_paths=None, images=None):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+
+    payload = {
+        "model": "gpt-4o",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,"},
+                    },
+                ],
+            }
+        ],
+        "max_tokens": 300,
+    }
+
+    results = []
+
+    if images is not None:
+        for image in images:
+            with tempfile.NamedTemporaryFile(delete=True, suffix=".jpg") as temp:
+                # Save the image to the temporary file
+                image.save(temp, format="JPEG")
+                temp.flush()
+
+                base64_image = encode_image(temp.name)
+                payload["messages"][0]["content"][1]["image_url"]["url"] = f"data:image/jpeg;base64,{base64_image}"
+                while True:
+                    try:
+                        response = requests.post(
+                            "https://api.openai.com/v1/chat/completions", headers=headers, json=payload
+                        )
+                        results.append(response.json()["choices"][0]["message"]["content"])
+                        break
+                    except Exception as e:
+                        print("Error:", e)
+    else:
+        for image_path in image_paths:
+            base64_image = encode_image(image_path)
+            payload["messages"][0]["content"][1]["image_url"]["url"] = f"data:image/jpeg;base64,{base64_image}"
+            while True:
+                try:
+                    response = requests.post(
+                        "https://api.openai.com/v1/chat/completions", headers=headers, json=payload
+                    )
+                    results.append(response.json()["choices"][0]["message"]["content"])
+                    break
+                except Exception as e:
+                    print("Error:", e)
+
+    return results
+
+
+prompt = """Is there smoke in the image? How confident are you?"""
+
+assistant = """You are given an image of a horizon scene. Your task is to determine if there is smoke in the image. Look for any smoke-like objects that seem to expand in size, as this could indicate the presence of smoke. Output "yes" if you see smoke, and "no" otherwise. Additionally, output a floating point number between 0 and 1 to indicating the chance of smoke. A value closer to 1 indicates higher chance of smoke."""
 
 if __name__ == "__main__":
-    image = Image.open("test/tile_3.jpg")
-    responses = prompt_phi3(PHI3_PROMPT, PHI3_ASSISTANT, images=[image])
+    image = Image.open("test/test_smoke.jpg")
+    responses = prompt_gpt4(GPT4_REASONING_PROMPT, images=[image])
     print(responses)
+    # image = Image.open("test/frame2/tile_2.jpg")
+    # responses = prompt_phi3(prompt, assistant, images=[image])
+    # print(responses, datetime.now())
     # # Open the file in read mode
     # with open("test/tile_boxes.txt", "r") as tile_boxes_file:
     #     tile_boxes = [
