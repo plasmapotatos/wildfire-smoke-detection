@@ -2,6 +2,7 @@ import ast
 import json
 import os
 import sys
+import re
 
 import numpy as np
 from gradio_client import Client
@@ -42,8 +43,8 @@ image = Image.open("test/nemo_test.jpg")
 # Specify parameters
 dist_above = 400  # Example distance above horizon
 dist_below = 300  # Example distance below the horizon
-tile_number = 5  # Example number of tiles
-num_tiles = 4
+tile_number = 1  # Example number of tiles
+num_tiles = 1
 tile_width = image.width // num_tiles  # Example tile width
 num_rows = 4
 num_cols = 4
@@ -211,7 +212,19 @@ def run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number):
     )
     return parsed_responses, union_bbox, stitched_image, bounding_boxes, new_tile_boxes
 
-def run_on_image_gpt4(image, dist_above, dist_below, tile_width, tile_number):
+def parse_reasoning_output(output):
+    # Regex pattern to match <output>...</output> or <output/> or <output />
+    pattern = r'<output>(.*?)<output>'
+    
+    # Find all matches
+    matches = re.findall(pattern, output.lower(), re.DOTALL)
+    if len(matches) == 0 or all([match == "" for match in matches]):
+        print("No matches found", output)
+    print(output, matches)
+    output = matches[0].lower() if matches else "no"
+    return output
+
+def run_on_image_gpt4(image, dist_above, dist_below, tile_width, tile_number, prompt_mode="reasoning"):
     horizon_y = image.height // 2
     # Get tiled images
     extracted_tiles, tile_boxes = extract_tiles_from_horizon(
@@ -220,11 +233,15 @@ def run_on_image_gpt4(image, dist_above, dist_below, tile_width, tile_number):
     for i, tile in enumerate(extracted_tiles):
         tile.save(f"test/tile_{i}.jpg")
     # Run detection on each tiled image
-    detect_responses = prompt_gpt4(GPT4_BASIC_PROMPT, images=extracted_tiles)
+    if prompt_mode == "reasoning":
+        detect_responses = prompt_gpt4(GPT4_REASONING_PROMPT, images=extracted_tiles)
+    elif prompt_mode == "basic":
+        detect_responses = prompt_gpt4(GPT4_BASIC_PROMPT, images=extracted_tiles)
 
-    print(detect_responses, detect_responses[0])
-
-    parsed_responses = [response.lower() for response in detect_responses]
+    if prompt_mode == "reasoning":
+        parsed_responses = [parse_reasoning_output(response) for response in detect_responses]
+    elif prompt_mode == "basic":
+        parsed_responses = [response.lower() for response in detect_responses]
 
     print(parsed_responses)
 
@@ -233,7 +250,6 @@ def run_on_image_gpt4(image, dist_above, dist_below, tile_width, tile_number):
         parsed_responses, tile_boxes
     )
 
-    print(bounding_boxes)
     union_bbox, stitched_image = stitch_image_with_bboxes(
         image, bounding_boxes, new_tile_boxes, union=True
     )
@@ -392,19 +408,20 @@ def run_on_series_folders(
 #     series_folder, output_folder, prompt, num_rows, num_cols, mode="tiled"
 # )
 
-# _, _, image, _, _ = run_on_image_paligemma(
-#     image, dist_above, dist_below, tile_width, tile_number
-# )
-# image.save("test/stitched.jpg")
-
-run_on_series_folders(
-    series_folder,
-    output_folder,
-    dist_above,
-    dist_below,
-    tile_width,
-    tile_number,
+image = Image.open("trial/false_positive/20180728_FIRE_rm-w-mobo-c/1532815746_+00120.jpg")
+_, _, image, _, _ = run_on_image_gpt4(
+    image, dist_above, dist_below, tile_width, tile_number, prompt_mode="reasoning"
 )
+image.save("test/stitched.jpg")
+
+# run_on_series_folders(
+#     series_folder,
+#     output_folder,
+#     dist_above,
+#     dist_below,
+#     tile_width,
+#     tile_number,
+# )
 
 # folder_path = "splits/validation"
 

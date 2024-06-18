@@ -308,6 +308,7 @@ def extract_tiles_from_horizon(
     # Calculate the total height of the tiles region
     total_height = dist_above + dist_below
 
+
     # Calculate the starting y-coordinate for extraction
     start_y = max(0, horizon_y - dist_above)
 
@@ -317,6 +318,14 @@ def extract_tiles_from_horizon(
     # Initialize an array to store the tiles
     tiles = []
     tile_boxes = []
+
+    if tile_number == 1:
+        # Extract the tile from the image
+        tile_box = (0, start_y, image.width, end_y)
+        tile_boxes.append(tile_box)
+        tile = image.crop(tile_box)
+        tiles.append(tile)
+        return tiles, tile_boxes
 
     # Iterate through the x-coordinates
     for x in range(
