@@ -10,12 +10,13 @@ from tqdm import tqdm
 
 from utils.image_utils import add_border, stitch_images, tile_image
 from utils.prompts import (
+    GPT4_BASIC_PROMPT,
     LLAVA_PROMPT,
     PALIGEMMA_DETECT_PROMPT,
     PHI3_ASSISTANT,
-    PHI3_PROMPT,
 )
 from utils.request_utils import (
+    prompt_gpt4,
     prompt_llava,
     prompt_llava_next,
     prompt_paligemma,
@@ -23,11 +24,11 @@ from utils.request_utils import (
 )
 
 # Constants
-num_rows = 4
-num_cols = 4
+num_rows = 1
+num_cols = 1
 series_folder = "splits/test"
-model_name = "paligemma"
-output_folder = f"series_results/{model_name}/tiled/{num_rows}x{num_cols}"
+model_name = "gpt4"
+output_folder = f"budget_results/{model_name}/tiled/{num_rows}x{num_cols}"
 
 
 if model_name == "paligemma" or model_name == "phi3":
@@ -37,43 +38,6 @@ if model_name == "paligemma" or model_name == "phi3":
 def extract_answer(output):
     answer = output.split("<output>")[1].split("<output/>")[0].strip()
     return answer
-
-
-def shave_2d_list(input_list):
-    """
-    Returns a 2D list with the first and last lists removed.
-
-    :param input_list: List of lists to be processed.
-    :return: New list with the first and last lists removed.
-    """
-    # Check if the input list is empty or has only one or two lists
-    if len(input_list) <= 2:
-        return []
-
-    # Slice the list to remove the first and last lists
-    return input_list[1:-1]
-
-
-def append_no_to_2d_list(input_list):
-    """
-    Returns a 2D list with a list of "no" appended at the beginning and the end.
-
-    :param input_list: List of lists to be processed.
-    :return: New list with a list of "no" at the beginning and the end.
-    """
-    # Determine the length of the lists in the input 2D list
-    if not input_list:
-        return [["no"]]
-
-    list_length = len(input_list[0])
-
-    # Create a list of "no" with the same length
-    no_list = ["no"] * list_length
-
-    # Append the "no" list at the beginning and the end
-    result_list = [no_list] + input_list + [no_list]
-
-    return result_list
 
 
 def run_on_folder(image_folder, output_folder, prompt, num_rows, num_cols):
@@ -111,19 +75,12 @@ def run_on_folder(image_folder, output_folder, prompt, num_rows, num_cols):
         tqdm.write(f"Processing image: {image_file}")
 
         flattened_images = [image for row in tiled_images for image in row]
-        shaved_images = flattened_images[num_cols : -(num_cols - 1)]
 
         # Send all tiles to LLAVA model
         # output = ast.literal_eval(prompt_llava_next(prompt, images=flattened_images))
         if model_name == "phi3":
             output = prompt_phi3(
-                prompt, PHI3_ASSISTANT, images=shaved_images, client=client
-            )
-            print(output)
-            output = (
-                ["no" for _ in range(num_cols)]
-                + output
-                + ["no" for _ in range(num_cols)]
+                prompt, PHI3_ASSISTANT, images=flattened_images, client=client
             )
         if model_name == "llava":
             output = ast.literal_eval(prompt_llava(prompt, images=flattened_images))
@@ -133,9 +90,11 @@ def run_on_folder(image_folder, output_folder, prompt, num_rows, num_cols):
             )
         if model_name == "paligemma":
             output = prompt_paligemma(prompt, images=flattened_images, client=client)
+        if model_name == "gpt4":
+            output = prompt_gpt4(prompt, images=flattened_images)
 
         output = [result.lower() for result in output]
-        print(output)
+        print(output, output[0])
         for row in range(num_rows):
             for col in range(num_cols):
                 # tqdm.write(f"Processing tile {row}, {col}")
@@ -212,4 +171,6 @@ def run_on_series_folders(
 
 
 # Process images
-run_on_series_folders(series_folder, output_folder, PALIGEMMA_DETECT_PROMPT, num_rows, num_cols)
+run_on_series_folders(
+    series_folder, output_folder, GPT4_BASIC_PROMPT, num_rows, num_cols
+)

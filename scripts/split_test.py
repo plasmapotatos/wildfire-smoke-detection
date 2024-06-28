@@ -21,9 +21,9 @@ def copy_folders(list_file, source_dir, output_dir):
             print(f"Folder not found: {folder_name}")
 
 # Parameters
-list_file = 'splits/train/train.txt'    # Path to your text file
+list_file = 'splits/test/test.txt'    # Path to your text file
 source_dir = 'raw_data'   # Path to your source directory containing folders
-output_dir = 'splits/train'   # Path to your output directory
+output_dir = 'splits/test'   # Path to your output directory
 
 # Run the function
 copy_folders(list_file, source_dir, output_dir)

@@ -3,6 +3,7 @@ import base64
 import json
 import socket
 import tempfile
+import tiktoken
 from datetime import datetime
 from io import BytesIO
 import os
@@ -275,7 +276,9 @@ def prompt_gpt4(prompt, image_paths=None, images=None):
                         response = requests.post(
                             "https://api.openai.com/v1/chat/completions", headers=headers, json=payload
                         )
+                        print(response.json())
                         results.append(response.json()["choices"][0]["message"]["content"])
+                        print(response.json()['usage']['total_tokens'])
                         break
                     except Exception as e:
                         print("Error:", e)
@@ -302,7 +305,7 @@ assistant = """You are given an image of a horizon scene. Your task is to determ
 
 if __name__ == "__main__":
     image = Image.open("test/test_smoke.jpg")
-    responses = prompt_gpt4(GPT4_REASONING_PROMPT, images=[image])
+    responses = prompt_phi3(GPT4_REASONING_PROMPT, "follow the prompt", images=[image])
     print(responses)
     # image = Image.open("test/frame2/tile_2.jpg")
     # responses = prompt_phi3(prompt, assistant, images=[image])

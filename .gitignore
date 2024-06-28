@@ -5,7 +5,11 @@
 /challenge1/
 /raw_data/
 /series_results/
+/budget_results/
+/parsed_results/
+/actual_trial/
 /sample/
 /splits/
 /videos/
 /nemo/
+wildfire-smoke-detection-data.zip

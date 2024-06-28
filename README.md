@@ -1,119 +1,180 @@
-# Open Wildfire Smoke Datasets
+<h1 align="center">Wildfire Smoke Detection </h1>
 
-The goal is to curate wildfire smoke datasets to enable open sharing and ease of access of datasets for developing vision based wildfire detection models. Easy access and open sharing of datasets will facilitate and accelerate the research efforts in solving wildfire crisis.
+![Smoke Detection](https://img.shields.io/badge/Task-Smoke_Detection-blue)
+![Travel Planner](https://img.shields.io/badge/Task-Tool_Use-blue) 
+![GPT-4](https://img.shields.io/badge/Model-GPT--4-green) 
+![LLMs](https://img.shields.io/badge/Model-LLMs-green)
 
-#### HPWREN Cameras
+Code for the Paper "[Exploring the Binary Classification of Wildfire Smoke Through Vision-Language Models](http://arxiv.org/abs/2402.01622)".
+<!TODO: change link>
 
-[AI For Mankind](https://aiformankind.org/) downloaded the public domain HPWREN Cameras images and annotated these images with bounding boxes for object detection.
-
-1. [Bounding Box Annotated Wildfire Smoke Dataset (Pascal VOC annotation format) Version 1.0](https://drive.google.com/file/d/1sEB77bfp2yMkgsSW9703vwDHol_cK6D5/view?usp=sharing) for smoke detection. Thank you our founder [Wei Shung Chung](https://www.linkedin.com/in/wei-shung-chung-01326a7/) in creating this first set of bounding boxes. In total, 744 bounding box annotated images are created.
-
-2. [Bounding Box Annotated Wildfire Smoke Dataset (Pascal VOC annotation format) Version 2.0](https://drive.google.com/drive/folders/1IKXN2-hxTrEQsIIKOxiUAuLgoxubA9Wq?usp=sharing) This is the latest annotated images we created with the help of **our volunteers**. It has 2192 annotated images.
-
-**Please give credits to AI For Mankind and HPWREN when using these bounding box annotated smoke datasets. The bounding box annotated smoke datasets are licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).** 
-
-Note: [Learn more about HPWREN](http://hpwren.ucsd.edu/)
-
-#### Donate to Support Us
-[Donate](https://donorbox.org/support-the-evaluation-and-deployment-of-wildfire-smoke-detector) to support our efforts. Your donation is tax deductible. AI For Mankind is a registered 503(c)(3) nonprofit organization.
-
-For classification, you can checkout this dataset [Wildfire Smoke vs No Smoke datasets](https://tinyurl.com/roo8tas). We separated the images into smoke and no smoke categories for anyone who is interested in building a smoke classifier.
+<p align="center">
+[<a href="http://arxiv.org/abs/2402.01622">Paper</a>] •
+[<a href="https://legacy-www.hpwren.ucsd.edu/FIgLib/">Dataset</a>]
+</p>
 
 
-We created a few promising wildfire smoke detection models using the version 1.0 of bounding box annotated wildfire smoke images (744 images). Learn more about our [wildfire smoke detection research](https://aiformankind.org/wildfire-smoke-detection-research/).
 
-#### Clouds Dataset
-Clouds/fog have similar visual appearance as wildfire smoke. Detection model might confuse cloud/fog with smoke. We share the following cloud dataset we curated from HPWREN cameras. 
+# TravelPlanner
 
-1. [Cloud dataset](https://drive.google.com/file/d/1mUgVvnctpdZ8VZgihIDMoeUgkhsx1iAH/view?usp=sharing)
+TravelPlanner is a benchmark crafted for evaluating language agents in tool-use and complex planning within multiple constraints.
 
-#### Submit your Model
-We welcome you to train new wildfire detection model and submit your model to us for benchmarking/evaluation. If your model beat our benchmark, we will deploy your model to production for further evaluation.
+For a given query, language agents are expected to formulate a comprehensive plan that includes transportation, daily meals, attractions, and accommodation for each day.
 
-One of our production models is the winning model from last year wildfire detection hackathon 2.0.
-
-#### Detection Results
-AI For Mankind's wildfire smoke detector aka "The Super Duper" built using this annotated dataset shows very promising results.
-
-Checkout our <a href="https://youtube.com/playlist?list=PLB-XesK9mcaCCvSbogU9SFBlp1LEAjgT2">detections for fire season 2020</a>
-
-1. For 2020-02-05 fire captured by HPWREN camera hp-w-mobo-c, our detector detected the smoke *13 minutes* after fire ignition.
-
-    <br/>
-    <a href="https://youtu.be/CcbXdcMEQvs"><img src="images/smoke_detector_in_action_13mins_detected.png" width="500" ></a>
-    <br clear="right"/>
-
- 2. For 2020-03-06 fire captured by HPWREN camera mlo-n-mobo-c, our detector detected the smoke *3 minutes* after fire ignition. See video below.
-
-    <br/>
-    <a href="https://youtu.be/X_QvjA1-Nb4"><img src="images/smoke_detector_in_action_3mins_detected.png" width="500" ></a>
-
-    <br clear="right"/>
-
-    <br/>
-    
- 3. For 2019-10-06 fire captured by HPWREN camera pi-s-mobo-c, our detector detected the smoke *3 minutes* after fire ignition. See video below.
-
-    <br/>
-    <a href="https://youtu.be/e9T_8coM20M"><img src="images/smoke_detector_in_action_3mins_detected_20191006.png" width="500" ></a>
-
-    <br clear="right"/>
-
-    <br/>
-    
- 4. For 2019-10-06 fire captured by HPWREN camera lp-s-mobo-c, our detector detected the smoke *10 minutes* after fire ignition. See video below.
-
-    <br/>
-    <a href="https://youtu.be/XVvZVnxHv4A"><img src="images/smoke_detector_in_action_10mins_detected_20191006.png" width="500"></a>
-
-    <br clear="right"/>
-
-    <br/>   
- 
- 5. For 2020-05-21 fire captured by HPWREN camera VEGMGMT ml-w-mobo-c, our detector detected the smoke *16 minutes* after fire ignition.
-
-    <br/>
-
-    <img src="images/20200521_VEGMGMT_ml-w-mobo-c_1590081617_+00960_smoke_detected.png" alt="Wildfire Smoke Detector in Action" width="450"/>
-    <br clear="right"/>
+For constraints, from the perspective of real world applications, TravelPlanner includes three types of them: Environment Constraint, Commonsense Constraint, and Hard Constraint. 
 
 
-You can checkout more results below:
+## Setup Environment
 
-   - [20191006: Detected smoke ~6 mins after fire ignition (HPWREN ml w mobo c)](https://youtu.be/wt1sQyRjoCI)
-   - [20191006: Detected smoke ~7 mins after fire ignition (HPWREN lp n mobo c)](https://youtu.be/dViR_XGQ8Oo)
-   - [20191006: Detected smoke ~10 mins after fire ignition (HPWREN lp s mobo c)](https://youtu.be/XVvZVnxHv4A)
-   - [20191006: Detected smoke ~3 mins after fire ignition (HPWREN pi s mobo c)](https://youtu.be/e9T_8coM20M)
-   - [20191007: Detected smoke ~10 mins after fire ignition (HPWREN sm s mobo c)](https://youtu.be/LqAxrY-Xa4w)
-   - [20200206: Detected smoke ~4 mins after fire ignition (HPWREN ml s mobo c)](https://youtu.be/Y3tal1-nk1Y)
-   - [20200306: Detected smoke ~3 mins after fire ignition (HPWREN mlo n mobo c)](https://youtu.be/X_QvjA1-Nb4)
-   - [20200205: Detected smoke ~13 mins after fire ignition (HPWREN hp w mobo c)](https://youtu.be/CcbXdcMEQvs)
-   - [20200615: Detected smoke ~4 mins after fire ignition (HPWREN rm e mobo c)](https://youtu.be/uPSkxGjUqRk)
-   
-See our wildfire smoke detector in action: https://www.youtube.com/playlist?list=PLB-XesK9mcaCCvSbogU9SFBlp1LEAjgT2   
+1. Create a conda environment and install dependency:
+```bash
+conda create -n wildfire-smoke-detection python=3.9
+conda activate wildfire-smoke-detection
+pip install -r requirements.txt
+```
 
-#### Become Volunteer 
-AI For Mankind's volunteers will continue to annotate these HPWREN images and make them available here. Please feel free to reach out to us ai.for.mankind@gmail.com if you would like to volunteer your time to help with labeling. Learn more about AI For Mankind [here](https://www.meetup.com/AI-for-Mankind/)
+2. Download the [database](https://drive.google.com/file/d/1pF1Sw6pBmq2sFkJvm-LzJOqrmfWoQgxE/view?usp=drive_link) and unzip it to the `TravelPlanner` directory (i.e., `your/path/TravelPlanner`).
 
-#### Other Smoke Images
-1. [Center for Wildfire Research of University of Split, Croatia](http://wildfire.fesb.hr/index.php?option=com_content&view=article&id=49&Itemid=54)
+## Setup Model
+### LLaVA
+Setup a LLaVA server on localhost using the official [LLaVA repository](https://github.com/haotian-liu/LLaVA). Simply clone their repository and add the llava_server.py file found in this repository into their root directory and run it.
 
-#### Papers
-* [Wildfire smoke detection based on local extremal region segmentation and surveillance](https://www.sciencedirect.com/science/article/pii/S0379711216301059)
-* [Wildfire Smoke Detection Using SpatioTemporal Bag-of-Features of Smoke](https://www.cse.unr.edu/~bebis/CS479/PaperPresentations/SmokeDetectionBoFs.pdf)
-* [A wireless sensor network for early forest fire detection and monitoring as a decision factor in the context of a complex integrated emergency response system](https://ieeexplore.ieee.org/document/8052688)
-* [Wildfire Smoke Detection using Convolutional Neural Networks](https://www.inf.fu-berlin.de/inst/ag-ki/rojas_home/documents/Betreute_Arbeiten/Master-Hohberg.pdf)
+### PaliGemma
+The PaliGemma model is developed by Google, and you can read about it on its [blog](https://ai.google.dev/gemma/docs/paligemma).
+```bash
+python utils/servers/paligemma_gradio_server.py
+```
+### Phi3
+The Phi3 is a small model developed by Microsoft and you can read more about it [here](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct)
+```bash
+python utils/servers/phi3_gradio_server.py
+```
+### GPT4
+Obtain an OpenAI api key and export it as an environment variable
+```bash
+export OPENAI_API_KEY="your api key"
+```
 
+## Running
+### Zero-Shot Mode
 
-#### Join Our Slack Channel
-- [AI For Mankind Slack Channel](https://tinyurl.com/vch2z68)
+In the zero-shot mode, the vision-language model is prompted with the entire image directly
 
-#### Join Our Meetup Group
-- [Join AI For Mankind Meetup Group](https://www.meetup.com/AI-for-Mankind/) to receive event announcement.
+```bash
+export OUTPUT_DIR=path/to/your/output/file
+# We support MODEL in ['gpt-3.5-turbo-X','gpt-4-1106-preview','gemini','mistral-7B-32K','mixtral']
+export MODEL_NAME=MODEL_NAME
+export OPENAI_API_KEY=YOUR_OPENAI_KEY
+# if you do not want to test google models, like gemini, just input "1".
+export GOOGLE_API_KEY=YOUR_GOOGLE_KEY
+# SET_TYPE in ['validation', 'test']
+export SET_TYPE=validation
+cd agents
+python tool_agents.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME
+```
+The generated plan will be stored in OUTPUT_DIR/SET_TYPE.
 
-#### AI For Mankind's Youtube Channel
-- [Presentations](https://www.youtube.com/channel/UCyosmgDqG3jfZ4_aYsN94Lw)
+### Sole-Planning Mode
 
+TravelPlanner also provides an easier mode solely focused on testing their planning ability.
+The sole-planning mode ensures that no crucial information is missed, thereby enabling agents to focus on planning itself.
 
-#### Donate to Support Us
-[Donate](https://donorbox.org/support-the-evaluation-and-deployment-of-wildfire-smoke-detector) to support our efforts. Your donation is tax deductible. 
+Please refer to paper for more details.
+
+```bash
+export OUTPUT_DIR=path/to/your/output/file
+# We support MODEL in ['gpt-3.5-turbo-X','gpt-4-1106-preview','gemini','mistral-7B-32K','mixtral']
+export MODEL_NAME=MODEL_NAME # langfun
+export OPENAI_API_KEY=YOUR_OPENAI_KEY
+# if you do not want to test google models, like gemini, just input "1".
+export GOOGLE_API_KEY=YOUR_GOOGLE_KEY
+# SET_TYPE in ['validation', 'test', 'train']
+export SET_TYPE=validation
+# STRATEGY in ['direct','cot','react','reflexion', 'by_day']
+export STRATEGY=direct
+
+cd tools/planner
+python sole_planning.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY
+```
+
+## Postprocess
+
+In order to parse natural language plans, we use gpt-4 to convert these plans into json formats. We encourage developers to try different parsing prompts to obtain better-formatted plans.
+
+```bash
+export OUTPUT_DIR=../evaluation
+export MODEL_NAME=gpt-4-1106-preview
+export SET_TYPE=validation
+export STRATEGY=direct
+export TMP_DIR=.
+export EVALUATION_DIR=../evaluation
+export MODE=sole-planning
+export SUBMISSION_FILE_DIR=./
+
+cd postprocess
+python parsing.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY --tmp_dir $TMP_DIR --mode $MODE
+
+# Then these parsed plans should be stored as the real json formats.
+python element_extraction.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY --tmp_dir $TMP_DIR --mode $MODE
+
+# Finally, combine these plan files for evaluation. We also provide a evaluation example file "example_evaluation.jsonl" in the postprocess folder.
+python combination.py --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY --submission_file_dir $SUBMISSION_FILE_DIR --mode $MODE
+```
+
+## Evaluation
+
+We support the offline validation set evaluation through the provided evaluation script. To avoid data contamination, please use our official [leaderboard](https://huggingface.co/spaces/osunlp/TravelPlannerLeaderboard) for test set evaluation.
+
+```bash
+export SET_TYPE=validation
+export EVALUATION_FILE_PATH=../postprocess/train_gpt-4-1106-preview_direct_sole-planning_submission.jsonl
+
+cd evaluation
+python eval.py --set_type $SET_TYPE --evaluation_file_path $EVALUATION_FILE_PATH
+```
+
+## Load Datasets
+
+```python
+from datasets import load_dataset
+# test can be substituted by "train" and "validation".
+data = load_dataset('osunlp/TravelPlanner','test')['test']
+```
+
+## TODO
+
+- ##### Code
+
+  - [x] Baseline Code
+
+  - [x] Query Construction Code
+
+  - [x] Evaluation Code
+  - [x] Plan Parsing and Element Extraction Code
+
+- ##### Environment
+
+  - [x] Release Environment Database
+  - [ ] Database Field Introduction
+
+## Contact
+
+If you have any problems, please contact 
+[Jian Xie](mailto:jianx0321@gmail.com),
+[Kai Zhang](mailto:zhang.13253@osu.edu),
+[Yu Su](mailto:su.809@osu.edu)
+
+## Citation Information
+
+If our paper or related resources prove valuable to your research, we kindly ask for citation. 
+
+<a href="https://github.com/OSU-NLP-Group/TravelPlanner"><img src="https://img.shields.io/github/stars/OSU-NLP-Group/TravelPlanner?style=social&label=TravelPanner" alt="GitHub Stars"></a>
+
+```
+@article{xie2024travelplanner,
+  title={Travelplanner: A benchmark for real-world planning with language agents},
+  author={Xie, Jian and Zhang, Kai and Chen, Jiangjie and Zhu, Tinghui and Lou, Renze and Tian, Yuandong and Xiao, Yanghua and Su, Yu},
+  journal={arXiv preprint arXiv:2402.01622},
+  year={2024}
+}
+```

@@ -43,15 +43,15 @@ image = Image.open("test/nemo_test.jpg")
 # Specify parameters
 dist_above = 400  # Example distance above horizon
 dist_below = 300  # Example distance below the horizon
-tile_number = 1  # Example number of tiles
-num_tiles = 1
+tile_number = 5  # Example number of tiles
+num_tiles = 4
 tile_width = image.width // num_tiles  # Example tile width
 num_rows = 4
 num_cols = 4
-series_folder = "splits/test"
+series_folder = "actual_trial"
 model_name = "gpt4"
 mode = "horizon"
-output_folder = f"series_results/{model_name}/{mode}/{tile_number}x{num_tiles}"
+output_folder = f"budget_results/{model_name}/{mode}/{tile_number}x{num_tiles}"
 horizon_y_sum = 0
 num_images = 0
 
@@ -181,7 +181,7 @@ def run_on_image_phi3(image, dist_above, dist_below, tile_width, tile_number):
     union_bbox, stitched_image = stitch_image_with_bboxes(
         image, bounding_boxes, new_tile_boxes, union=True
     )
-    return parsed_responses, stitched_image, bounding_boxes, new_tile_boxes
+    return parsed_responses, union_bbox, stitched_image, bounding_boxes, new_tile_boxes
 
 
 def run_on_image_llava(image, dist_above, dist_below, tile_width, tile_number):
@@ -253,7 +253,22 @@ def run_on_image_gpt4(image, dist_above, dist_below, tile_width, tile_number, pr
     union_bbox, stitched_image = stitch_image_with_bboxes(
         image, bounding_boxes, new_tile_boxes, union=True
     )
-    return parsed_responses, union_bbox, stitched_image, bounding_boxes, new_tile_boxes
+    return parsed_responses, union_bbox, stitched_image, bounding_boxes, new_tile_boxes, detect_responses
+
+def middle_half(array):
+    # Step 1: Sort the array
+    sorted_array = sorted(array)
+    
+    # Step 2: Calculate the necessary indices
+    n = len(sorted_array)
+    half_length = (n + 1) // 2  # Equivalent to ceil(n / 2)
+    quarter_length = (half_length + 1) // 2  # Equivalent to ceil(half_length / 2)
+    
+    start_index = quarter_length
+    end_index = n - quarter_length
+    
+    # Step 3: Slice and return the middle half
+    return sorted_array[start_index:end_index]
 
 def run_on_folder(
     image_folder, output_folder, dist_above, dist_below, tile_width, tile_number
@@ -264,20 +279,22 @@ def run_on_folder(
     tile_box_folder = os.path.join(output_folder, "tile_boxes")
     results_folder = os.path.join(output_folder, "results")
     union_bounding_box_folder = os.path.join(output_folder, "union_bounding_boxes")
+    raw_output_folder = os.path.join(output_folder, "raw_output")
     os.makedirs(stitched_folder, exist_ok=True)
     os.makedirs(bounding_box_folder, exist_ok=True)
     os.makedirs(tile_box_folder, exist_ok=True)
     os.makedirs(results_folder, exist_ok=True)
     os.makedirs(union_bounding_box_folder, exist_ok=True)
-
+    os.makedirs(raw_output_folder, exist_ok=True)
     # Get list of image files
     image_files = os.listdir(image_folder)
     global horizon_y_sum
     global num_images
     horizon_y_sum = 0
     num_images = 0
-    print(image_files)
-    for image_file in tqdm(image_files):
+    halved_image_files = middle_half(sorted(image_files))
+    print(halved_image_files)
+    for image_file in tqdm(halved_image_files):
         # check if image is an image
         if not image_file.endswith(".jpg") and not image_file.endswith(".jpeg"):
             continue
@@ -322,11 +339,12 @@ def run_on_folder(
                 stitched_image,
                 bounding_boxes,
                 tile_boxes,
+                raw_output,
             ) = run_on_image_gpt4(
                 image, dist_above, dist_below, tile_width, tile_number
             )
         if model_name == "phi3":
-            parsed_results, stitched_image, bounding_boxes, tile_boxes = (
+            parsed_results, union_bounding_box, stitched_image, bounding_boxes, tile_boxes = (
                 run_on_image_phi3(
                     image, dist_above, dist_below, tile_width, tile_number
                 )
@@ -359,6 +377,13 @@ def run_on_folder(
         # Save results
         with open(os.path.join(results_folder, f"{image_name}_results.txt"), "w") as f:
             f.write(str(parsed_results))
+
+        # Save raw output
+        if model_name == "gpt4":
+            with open(
+                os.path.join(raw_output_folder, f"{image_name}_raw_output.txt"), "w"
+            ) as f:
+                f.write(str(raw_output))
 
 
 def run_on_series_folders(
@@ -408,20 +433,22 @@ def run_on_series_folders(
 #     series_folder, output_folder, prompt, num_rows, num_cols, mode="tiled"
 # )
 
-image = Image.open("trial/false_positive/20180728_FIRE_rm-w-mobo-c/1532815746_+00120.jpg")
-_, _, image, _, _ = run_on_image_gpt4(
-    image, dist_above, dist_below, tile_width, tile_number, prompt_mode="reasoning"
-)
-image.save("test/stitched.jpg")
-
-# run_on_series_folders(
-#     series_folder,
-#     output_folder,
-#     dist_above,
-#     dist_below,
-#     tile_width,
-#     tile_number,
+# image = Image.open("trial/false_positive/20180728_FIRE_rm-w-mobo-c/1532815746_+00120.jpg")
+# _, _, image, _, _ = run_on_image_gpt4(
+#     image, dist_above, dist_below, tile_width, tile_number, prompt_mode="reasoning"
 # )
+# image.save("test/stitched.jpg")
+
+run_on_series_folders(
+    series_folder,
+    output_folder,
+    dist_above,
+    dist_below,
+    tile_width,
+    tile_number,
+    num_series=30,
+    mode=mode,
+)
 
 # folder_path = "splits/validation"
 

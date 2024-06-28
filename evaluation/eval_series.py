@@ -4,9 +4,9 @@ from ast import literal_eval
 
 from tqdm import tqdm
 
-model_name = "gpt4"
-mode = "horizon"
-series_folder_path = f"series_results/{model_name}/{mode}/5x4"
+model_name = "paligemma"
+mode = "tiled"
+series_folder_path = f"series_results/{model_name}/{mode}/4x4"
 
 
 def evaluate_tiles(tiled_results, image_label):
@@ -95,7 +95,7 @@ def evaluate_series(series_folder, mode="tiled"):
         for file_name in os.listdir(raw_folder):
             # print(file_name)
             print(file_name)
-            if file_name.endswith("_bounding_boxes.txt"):
+            if file_name.endswith(".txt"):
 
                 # Extract image label and time from file name
                 parts = file_name.split("_")
