@@ -14,6 +14,7 @@ from utils.prompts import (
     LLAVA_PROMPT,
     PALIGEMMA_DETECT_PROMPT,
     PHI3_ASSISTANT,
+    PHI3_PROMPT,
 )
 from utils.request_utils import (
     prompt_gpt4,
@@ -27,8 +28,8 @@ from utils.request_utils import (
 num_rows = 1
 num_cols = 1
 series_folder = "splits/test"
-model_name = "gpt4"
-output_folder = f"budget_results/{model_name}/tiled/{num_rows}x{num_cols}"
+model_name = os.environ.get("MODEL_NAME", "gpt4")
+output_folder = f"results/{model_name}/tiled/{num_rows}x{num_cols}"
 
 
 if model_name == "paligemma" or model_name == "phi3":
@@ -94,7 +95,7 @@ def run_on_folder(image_folder, output_folder, prompt, num_rows, num_cols):
             output = prompt_gpt4(prompt, images=flattened_images)
 
         output = [result.lower() for result in output]
-        print(output, output[0])
+
         for row in range(num_rows):
             for col in range(num_cols):
                 # tqdm.write(f"Processing tile {row}, {col}")
@@ -171,6 +172,12 @@ def run_on_series_folders(
 
 
 # Process images
-run_on_series_folders(
-    series_folder, output_folder, GPT4_BASIC_PROMPT, num_rows, num_cols
-)
+if __name__ == "__main__":
+    if model_name == "paligemma":
+        run_on_series_folders(series_folder, output_folder, PALIGEMMA_DETECT_PROMPT, num_rows, num_cols)
+    elif model_name == "phi3":
+        run_on_series_folders(series_folder, output_folder, PHI3_PROMPT, num_rows, num_cols)
+    elif model_name == "llava":
+        run_on_series_folders(series_folder, output_folder, LLAVA_PROMPT, num_rows, num_cols)
+    elif model_name == "gpt4":
+        run_on_series_folders(series_folder, output_folder, GPT4_BASIC_PROMPT, num_rows, num_cols)

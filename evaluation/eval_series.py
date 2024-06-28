@@ -4,10 +4,9 @@ from ast import literal_eval
 
 from tqdm import tqdm
 
-model_name = "paligemma"
-mode = "tiled"
-series_folder_path = f"series_results/{model_name}/{mode}/4x4"
-
+model_name = os.environ.get("MODEL_NAME", "gpt4")
+mode = os.environ.get("MODE", "tiled")
+results_path = os.environ.get("RESULTS_PATH", "results/gpt4/tiled/4x4")
 
 def evaluate_tiles(tiled_results, image_label):
     """
@@ -74,7 +73,7 @@ def evaluate_series(series_folder, mode="tiled"):
         if not os.path.isdir(series_path):
             continue
 
-        if mode == "tiled":
+        if mode == "tiled" or mode == "zero-shot":
             raw_folder = os.path.join(series_path, "raw")
         if mode == "horizon":
             raw_folder = os.path.join(series_path, "bounding_boxes")
@@ -108,7 +107,7 @@ def evaluate_series(series_folder, mode="tiled"):
                 #     time_seconds = int(parts[1][0:])
                 # except:
                 #     continue
-                if mode == "tiled":
+                if mode == "tiled" or mode == "zero-shot":
                     file_path = os.path.join(raw_folder, file_name)
                     # print(file_name)
                     # print(file_path)
@@ -157,4 +156,4 @@ def evaluate_series(series_folder, mode="tiled"):
 
 
 # Example usage
-evaluate_series(series_folder_path, mode=mode)
+evaluate_series(results_path, mode=mode)

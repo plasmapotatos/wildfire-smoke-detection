@@ -41,19 +41,15 @@ from utils.request_utils import (
 image = Image.open("test/nemo_test.jpg")
 
 # Specify parameters
-dist_above = 400  # Example distance above horizon
-dist_below = 300  # Example distance below the horizon
-tile_number = 5  # Example number of tiles
-num_tiles = 4
+dist_above = os.environ.get("DIST_ABOVE", 400)
+dist_below = os.environ.get("DIST_BELOW", 300)
+tile_number = os.environ.get("TILE_NUMBER", 5)
+num_tiles = os.environ.get("NUM_TILES", 4)
+model_name = os.environ.get("MODEL_NAME", "gpt4")
+
 tile_width = image.width // num_tiles  # Example tile width
-num_rows = 4
-num_cols = 4
-series_folder = "actual_trial"
-model_name = "gpt4"
-mode = "horizon"
-output_folder = f"budget_results/{model_name}/{mode}/{tile_number}x{num_tiles}"
-horizon_y_sum = 0
-num_images = 0
+series_folder = "splits/test"
+output_folder = f"results/{model_name}/horizon/{tile_number}x{num_tiles}"
 
 if model_name == "paligemma" or model_name == "phi3":
     client = Client("http://127.0.0.1:7860/")
@@ -94,21 +90,6 @@ def run_on_image_paligemma(image, dist_above, dist_below, tile_width, tile_numbe
     segment_response = prompt_paligemma(
         PALIGEMMA_SEGMENT_PROMPT, images=[image], client=client
     )[0]
-    # horizon_y_new = extract_and_calculate_horizon(
-    #     segment_response, image.width, image.height
-    # )
-    global horizon_y_sum
-    global num_images
-    # horizon_y_sum += horizon_y_new
-    # num_images += 1
-    # horizon_y = horizon_y_sum // num_images
-    # if horizon_y < image.height // 2 - 100 or horizon_y > image.height // 2 + 100:
-    #     print(
-    #         f"Possibly incorrect horizon detection: {horizon_y} out of {image.height}"
-    #     )
-    # print("new: ", horizon_y_new)
-    # print("sum: ", horizon_y_sum)
-    # print("num: ", num_images)
     horizon_y = image.height // 2
     # Get tiled images
     extracted_tiles, tile_boxes = extract_tiles_from_horizon(
@@ -394,7 +375,6 @@ def run_on_series_folders(
     tile_width,
     tile_number,
     num_series=None,
-    mode="tiled",
 ):
     # Ensure the output folder exists
     if not os.path.exists(output_folder):
@@ -427,36 +407,13 @@ def run_on_series_folders(
                 tile_number,
             )
 
-
-# # Process images
-# run_on_series_folders(
-#     series_folder, output_folder, prompt, num_rows, num_cols, mode="tiled"
-# )
-
-# image = Image.open("trial/false_positive/20180728_FIRE_rm-w-mobo-c/1532815746_+00120.jpg")
-# _, _, image, _, _ = run_on_image_gpt4(
-#     image, dist_above, dist_below, tile_width, tile_number, prompt_mode="reasoning"
-# )
-# image.save("test/stitched.jpg")
-
-run_on_series_folders(
-    series_folder,
-    output_folder,
-    dist_above,
-    dist_below,
-    tile_width,
-    tile_number,
-    num_series=30,
-    mode=mode,
-)
-
-# folder_path = "splits/validation"
-
-# run_on_folder(
-#     folder_path,
-#     output_folder,
-#     dist_above,
-#     dist_below,
-#     tile_width,
-#     tile_number,
-# )
+if __name__ == "__main__":
+    run_on_series_folders(
+        series_folder,
+        output_folder,
+        dist_above,
+        dist_below,
+        tile_width,
+        tile_number,
+        num_series=30,
+    )

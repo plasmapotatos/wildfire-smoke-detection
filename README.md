@@ -14,16 +14,6 @@ Code for the Paper "[Exploring the Binary Classification of Wildfire Smoke Throu
 </p>
 
 
-
-# TravelPlanner
-
-TravelPlanner is a benchmark crafted for evaluating language agents in tool-use and complex planning within multiple constraints.
-
-For a given query, language agents are expected to formulate a comprehensive plan that includes transportation, daily meals, attractions, and accommodation for each day.
-
-For constraints, from the perspective of real world applications, TravelPlanner includes three types of them: Environment Constraint, Commonsense Constraint, and Hard Constraint. 
-
-
 ## Setup Environment
 
 1. Create a conda environment and install dependency:
@@ -33,9 +23,13 @@ conda activate wildfire-smoke-detection
 pip install -r requirements.txt
 ```
 
-2. Download the [database](https://drive.google.com/file/d/1pF1Sw6pBmq2sFkJvm-LzJOqrmfWoQgxE/view?usp=drive_link) and unzip it to the `TravelPlanner` directory (i.e., `your/path/TravelPlanner`).
-
+2. Download the [database](https://drive.google.com/file/d/1pF1Sw6pBmq2sFkJvm-LzJOqrmfWoQgxE/view?usp=drive_link) and unzip it to the `wildfire-smoke-detection` directory (i.e., `your/path/wildfire-smoke-detection`).
+3. Process the data.
+```bash
+python scripts/process_data.py
+```
 ## Setup Model
+Choose a model to test. We recommend the Phi3 model as it is quite small and can easily be run locally. The following scripts will set up a local server to run the model.
 ### LLaVA
 Setup a LLaVA server on localhost using the official [LLaVA repository](https://github.com/haotian-liu/LLaVA). Simply clone their repository and add the llava_server.py file found in this repository into their root directory and run it.
 
@@ -58,123 +52,67 @@ export OPENAI_API_KEY="your api key"
 ## Running
 ### Zero-Shot Mode
 
-In the zero-shot mode, the vision-language model is prompted with the entire image directly
+In the zero-shot mode, the vision-language model is prompted with the entire image directly.
 
 ```bash
-export OUTPUT_DIR=path/to/your/output/file
-# We support MODEL in ['gpt-3.5-turbo-X','gpt-4-1106-preview','gemini','mistral-7B-32K','mixtral']
+# we support "llava", "paligemma", "phi3", and "gpt4".
 export MODEL_NAME=MODEL_NAME
-export OPENAI_API_KEY=YOUR_OPENAI_KEY
-# if you do not want to test google models, like gemini, just input "1".
-export GOOGLE_API_KEY=YOUR_GOOGLE_KEY
-# SET_TYPE in ['validation', 'test']
-export SET_TYPE=validation
-cd agents
-python tool_agents.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME
+
+python agents/zeroshot_agent.py
 ```
-The generated plan will be stored in OUTPUT_DIR/SET_TYPE.
+The output results will be stored in the series_results/MODEL_NAME/tiled/1x1 folder.
+### Image Tiling Mode
 
-### Sole-Planning Mode
-
-TravelPlanner also provides an easier mode solely focused on testing their planning ability.
-The sole-planning mode ensures that no crucial information is missed, thereby enabling agents to focus on planning itself.
-
-Please refer to paper for more details.
+In the image tiling mode, the image is first tiled into a number of tiles of equal size, which are then each fed separately into the vision-language model.
 
 ```bash
-export OUTPUT_DIR=path/to/your/output/file
-# We support MODEL in ['gpt-3.5-turbo-X','gpt-4-1106-preview','gemini','mistral-7B-32K','mixtral']
-export MODEL_NAME=MODEL_NAME # langfun
-export OPENAI_API_KEY=YOUR_OPENAI_KEY
-# if you do not want to test google models, like gemini, just input "1".
-export GOOGLE_API_KEY=YOUR_GOOGLE_KEY
-# SET_TYPE in ['validation', 'test', 'train']
-export SET_TYPE=validation
-# STRATEGY in ['direct','cot','react','reflexion', 'by_day']
-export STRATEGY=direct
+# we support "llava", "paligemma", "phi3", and "gpt4".
+export MODEL_NAME=MODEL_NAME
+export NUM_ROWS=NUM_ROWS # Default is 4 rows
+export NUM_COLS=NUM_COLS # Default is 4 columns
 
-cd tools/planner
-python sole_planning.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY
+python agents/image_tiling_agent.py
 ```
+The output results will be stored in the results/MODEL_NAME/tiled/NUM_ROWSxNUM_COLS folder.
 
-## Postprocess
-
-In order to parse natural language plans, we use gpt-4 to convert these plans into json formats. We encourage developers to try different parsing prompts to obtain better-formatted plans.
-
+### Horizon Tiling Mode
+In the horizon tiling mode, the image is first tiled across the middle with a number of tiles, which are then each fed separately into the vision-language model.
 ```bash
-export OUTPUT_DIR=../evaluation
-export MODEL_NAME=gpt-4-1106-preview
-export SET_TYPE=validation
-export STRATEGY=direct
-export TMP_DIR=.
-export EVALUATION_DIR=../evaluation
-export MODE=sole-planning
-export SUBMISSION_FILE_DIR=./
+# we support "llava", "paligemma", "phi3", and "gpt4".
+export MODEL_NAME=MODEL_NAME
+export DIST_ABOVE=DIST_ABOVE # Default is 400 pixels above middle
+export DIST_BELOW=DIST_BELOW # Default is 300 pixels below middle
+export TILE_NUMBER=TILE_NUMBER # Number of tiles to be spaced across middle, default 5
+export NUM_TILES=NUM_TILES # Number of tiles that can be spaced across the middle, used to calculate the tile width, default is 4 to create overlap
 
-cd postprocess
-python parsing.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY --tmp_dir $TMP_DIR --mode $MODE
-
-# Then these parsed plans should be stored as the real json formats.
-python element_extraction.py  --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY --tmp_dir $TMP_DIR --mode $MODE
-
-# Finally, combine these plan files for evaluation. We also provide a evaluation example file "example_evaluation.jsonl" in the postprocess folder.
-python combination.py --set_type $SET_TYPE --output_dir $OUTPUT_DIR --model_name $MODEL_NAME --strategy $STRATEGY --submission_file_dir $SUBMISSION_FILE_DIR --mode $MODE
+python agents/horizon_agent.py
 ```
-
+The output results will be stored in the results/MODEL_NAME/horizon/TILE_NUMBERxNUM_TILES folder.
 ## Evaluation
 
-We support the offline validation set evaluation through the provided evaluation script. To avoid data contamination, please use our official [leaderboard](https://huggingface.co/spaces/osunlp/TravelPlannerLeaderboard) for test set evaluation.
+We support the offline validation set evaluation through the provided evaluation script.
 
 ```bash
-export SET_TYPE=validation
-export EVALUATION_FILE_PATH=../postprocess/train_gpt-4-1106-preview_direct_sole-planning_submission.jsonl
+# we support "llava", "paligemma", "phi3", and "gpt4".
+export MODEL_NAME=MODEL_NAME
+export MODE=MODE #can be either tiled or horizon, if you are running zero-shot, put tiled
+export RESULTS_PATH=RESULTS_PATH # path to results folder, ex: results/gpt4/tiled/4x4
 
-cd evaluation
-python eval.py --set_type $SET_TYPE --evaluation_file_path $EVALUATION_FILE_PATH
+python evaluation/eval_series.py # saves statistics file into the results_path folder
+
+export FILE_PATH=FILE_PATH # path to statistics file, ex: "results/gpt4/tiled/4x4/series_evaluation_stats.json"
+
+python evaluation/process_stats.py
 ```
-
-## Load Datasets
-
-```python
-from datasets import load_dataset
-# test can be substituted by "train" and "validation".
-data = load_dataset('osunlp/TravelPlanner','test')['test']
-```
-
-## TODO
-
-- ##### Code
-
-  - [x] Baseline Code
-
-  - [x] Query Construction Code
-
-  - [x] Evaluation Code
-  - [x] Plan Parsing and Element Extraction Code
-
-- ##### Environment
-
-  - [x] Release Environment Database
-  - [ ] Database Field Introduction
+The processed statistics will be saved to the processed_results.json file.
 
 ## Contact
 
 If you have any problems, please contact 
-[Jian Xie](mailto:jianx0321@gmail.com),
-[Kai Zhang](mailto:zhang.13253@osu.edu),
-[Yu Su](mailto:su.809@osu.edu)
+[Timothy Wei](mailto:timswei@gmail.com).
 
 ## Citation Information
 
 If our paper or related resources prove valuable to your research, we kindly ask for citation. 
 
-<a href="https://github.com/OSU-NLP-Group/TravelPlanner"><img src="https://img.shields.io/github/stars/OSU-NLP-Group/TravelPlanner?style=social&label=TravelPanner" alt="GitHub Stars"></a>
-
-```
-@article{xie2024travelplanner,
-  title={Travelplanner: A benchmark for real-world planning with language agents},
-  author={Xie, Jian and Zhang, Kai and Chen, Jiangjie and Zhu, Tinghui and Lou, Renze and Tian, Yuandong and Xiao, Yanghua and Su, Yu},
-  journal={arXiv preprint arXiv:2402.01622},
-  year={2024}
-}
-```
+Paper under review!
