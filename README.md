@@ -5,7 +5,7 @@
 ![GPT-4](https://img.shields.io/badge/Model-GPT--4-green) 
 ![LLMs](https://img.shields.io/badge/Model-LLMs-green)
 
-Code for the Paper "[Exploring the Binary Classification of Wildfire Smoke Through Vision-Language Models](http://arxiv.org/abs/2402.01622)".
+Code for the Paper "Exploring the Binary Classification of Wildfire Smoke Through Vision-Language Models" (Under Review!).
 <!TODO: change link>
 
 <p align="center">
