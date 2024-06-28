@@ -20,6 +20,8 @@ Code for the Paper "Exploring the Binary Classification of Wildfire Smoke Throug
 ```bash
 conda create -n wildfire-smoke-detection python=3.10
 conda activate wildfire-smoke-detection
+pip install --upgrade pip
+pip install -e .
 pip install -r requirements.txt
 ```
 
