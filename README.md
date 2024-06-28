@@ -9,7 +9,7 @@ Code for the Paper "Exploring the Binary Classification of Wildfire Smoke Throug
 <!TODO: change link>
 
 <p align="center">
-[<a href="http://arxiv.org/abs/2402.01622">Paper</a>] •
+[Paper] •
 [<a href="https://legacy-www.hpwren.ucsd.edu/FIgLib/">Dataset</a>]
 </p>
 
@@ -18,12 +18,12 @@ Code for the Paper "Exploring the Binary Classification of Wildfire Smoke Throug
 
 1. Create a conda environment and install dependency:
 ```bash
-conda create -n wildfire-smoke-detection python=3.9
+conda create -n wildfire-smoke-detection python=3.10
 conda activate wildfire-smoke-detection
 pip install -r requirements.txt
 ```
 
-2. Download the [database](https://drive.google.com/file/d/1pF1Sw6pBmq2sFkJvm-LzJOqrmfWoQgxE/view?usp=drive_link) and unzip it to the `wildfire-smoke-detection` directory (i.e., `your/path/wildfire-smoke-detection`).
+2. Download the [database](https://drive.google.com/file/d/1wMl7LrDMpRl-FFjoyCLm0ARNLVBUHk5z/view?usp=sharing) and unzip it to the `wildfire-smoke-detection` directory (i.e., `your/path/wildfire-smoke-detection`).
 3. Process the data.
 ```bash
 python scripts/process_data.py
