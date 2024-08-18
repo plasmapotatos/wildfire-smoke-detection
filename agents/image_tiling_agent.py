@@ -10,26 +10,26 @@ from tqdm import tqdm
 
 from utils.image_utils import add_border, stitch_images, tile_image
 from utils.prompts import (
+    GPT4_BASIC_PROMPT,
     LLAVA_PROMPT,
     PALIGEMMA_DETECT_PROMPT,
     PHI3_ASSISTANT,
     PHI3_PROMPT,
-    GPT4_BASIC_PROMPT,
 )
 from utils.request_utils import (
+    prompt_gpt4,
     prompt_llava,
     prompt_llava_next,
     prompt_paligemma,
     prompt_phi3,
-    prompt_gpt4,
 )
 
 # Constants
 num_rows = os.environ.get("NUM_ROWS", 4)
 num_cols = os.environ.get("NUM_COLS", 4)
-series_folder = "splits/test"
+series_folder = "save_me"
 model_name = os.environ.get("MODEL_NAME", "gpt4")
-output_folder = f"results/{model_name}/tiled/{num_rows}x{num_cols}"
+output_folder = f"budget_results/{model_name}/tiled/{num_rows}x{num_cols}"
 
 
 if model_name == "paligemma" or model_name == "phi3":
@@ -136,7 +136,7 @@ def run_on_folder(image_folder, output_folder, prompt, num_rows, num_cols):
         if model_name == "paligemma":
             output = prompt_paligemma(prompt, images=flattened_images, client=client)
         if model_name == "gpt4":
-            output = prompt_gpt4(prompt, images=flattened_images, client=client)
+            output = prompt_gpt4(prompt, images=flattened_images)
 
         output = [result.lower() for result in output]
 
@@ -218,10 +218,18 @@ def run_on_series_folders(
 # Process images
 if __name__ == "__main__":
     if model_name == "paligemma":
-        run_on_series_folders(series_folder, output_folder, PALIGEMMA_DETECT_PROMPT, num_rows, num_cols)
+        run_on_series_folders(
+            series_folder, output_folder, PALIGEMMA_DETECT_PROMPT, num_rows, num_cols
+        )
     elif model_name == "phi3":
-        run_on_series_folders(series_folder, output_folder, PHI3_PROMPT, num_rows, num_cols)
+        run_on_series_folders(
+            series_folder, output_folder, PHI3_PROMPT, num_rows, num_cols
+        )
     elif model_name == "llava":
-        run_on_series_folders(series_folder, output_folder, LLAVA_PROMPT, num_rows, num_cols)
+        run_on_series_folders(
+            series_folder, output_folder, LLAVA_PROMPT, num_rows, num_cols
+        )
     elif model_name == "gpt4":
-        run_on_series_folders(series_folder, output_folder, GPT4_BASIC_PROMPT, num_rows, num_cols)
+        run_on_series_folders(
+            series_folder, output_folder, GPT4_BASIC_PROMPT, num_rows, num_cols
+        )

@@ -12,4 +12,11 @@
 /splits/
 /videos/
 /nemo/
-wildfire-smoke-detection-data.zip
+*.zip
+processed_results.json
+save_me/
+trial/
+
+#compile
+build/
+*.egg-info/

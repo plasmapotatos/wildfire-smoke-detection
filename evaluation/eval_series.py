@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 model_name = os.environ.get("MODEL_NAME", "gpt4")
 mode = os.environ.get("MODE", "tiled")
-results_path = os.environ.get("RESULTS_PATH", "results/gpt4/tiled/4x4")
+results_path = os.environ.get("RESULTS_PATH", "budget_results/gpt4/tiled/4x4")
 
 def evaluate_tiles(tiled_results, image_label):
     """

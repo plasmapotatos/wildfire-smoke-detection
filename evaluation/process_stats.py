@@ -123,7 +123,7 @@ def save_results_to_json(results, output_file):
 
 
 def main():
-    file_path = os.environ.get("FILE_PATH", "results/gpt4/tiled/4x4/series_evaluation_stats.json")
+    file_path = os.environ.get("FILE_PATH", "budget_results/gpt4/tiled/4x4/series_evaluation_stats.json")
     output_file = "processed_results.json"
 
     num_worst_tp = 5  # Number of worst-performing true positives
